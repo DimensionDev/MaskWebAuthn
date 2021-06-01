@@ -1,0 +1,33 @@
+{
+    "references": [{ "path": "./backend" }, { "path": "./types" }],
+    "compilerOptions": {
+        // emit
+        "target": "ES2019",
+        "module": "ESNext",
+        "incremental": true,
+        "sourceMap": true,
+        "declaration": true,
+        "declarationMap": true,
+        "useDefineForClassFields": true,
+        "stripInternal": true,
+        // type
+        "lib": ["DOM", "DOM.Iterable", "ES2019"],
+        "skipLibCheck": true,
+        // project reference
+        "composite": true,
+        // module
+        "isolatedModules": true,
+        "moduleResolution": "Node",
+        "esModuleInterop": true,
+        // strict
+        "strict": true,
+        "noFallthroughCasesInSwitch": true,
+        "noImplicitAny": true,
+        "noImplicitOverride": true,
+        "noImplicitReturns": true,
+        "noImplicitThis": true,
+        "importsNotUsedAsValues": "error",
+        "forceConsistentCasingInFileNames": true
+    },
+    "files": []
+}
