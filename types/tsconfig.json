@@ -1,8 +1,9 @@
 {
     "extends": "../tsconfig.json",
     "compilerOptions": {
-        "rootDir": "../dist/types",
+        "rootDir": "./",
+        "outDir": "../dist/types",
         "skipLibCheck": false
     },
-    "include": ["./**/*.ts"]
+    "files": ["./interface.ts"]
 }

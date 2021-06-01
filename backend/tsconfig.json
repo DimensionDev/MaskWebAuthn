@@ -1,8 +1,9 @@
 {
-    "references": [{"path": "../types"}],
+    "references": [{ "path": "../types" }],
     "extends": "../tsconfig.json",
     "compilerOptions": {
-        "rootDir": "../dist/backend"
+        "rootDir": "./",
+        "outDir": "../dist/backend"
     },
-    "include": ["./**/*.ts"]
+    "files": ["./index.ts"]
 }
