@@ -1,3 +1,5 @@
-import type { A } from '../types/interface'
-export declare const a: A
-console.log('hi')
+import type { _PublicKeyAuthenticatorProtocol } from '../types/interface'
+export interface CreateAuthenticatorOptions {}
+export function createPublicKeyAuthenticator(opts: CreateAuthenticatorOptions): _PublicKeyAuthenticatorProtocol {
+    return {}
+}
