@@ -2,21 +2,17 @@ import rollup from 'rollup'
 import sucrase from '@rollup/plugin-sucrase'
 
 /** @type {rollup.RollupOptions} */
-const api = {
-    input: './api/index.ts',
-    output: {
-        file: './dist/api.js',
-        format: 'esm',
-    },
-    plugins: [sucrase({ transforms: ['typescript'] })],
-}
-/** @type {rollup.RollupOptions} */
 const backend = {
-    input: './backend/index.ts',
+    input: {
+        backend: './backend/index.ts',
+        api: './api/index.ts',
+        playground: './playground/index.ts',
+    },
     output: {
-        file: './dist/backend.js',
+        dir: './dist/',
         format: 'esm',
+
     },
     plugins: [sucrase({ transforms: ['typescript'] })],
 }
-export default [api, backend]
+export default backend
