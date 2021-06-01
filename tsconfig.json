@@ -1,5 +1,5 @@
 {
-    "references": [{ "path": "./backend" }, { "path": "./types" }],
+    "references": [{ "path": "./backend" }, { "path": "./types" }, { "path": "./api" }],
     "compilerOptions": {
         // emit
         "target": "ES2019",
