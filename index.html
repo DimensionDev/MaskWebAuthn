@@ -7,6 +7,10 @@
     <title>Playground</title>
 </head>
 <body>
-    <script type="module" src="./dist/playground.js"></script>
+    <button id="login">Login with mask</button>
+    <script type="module">
+        import { loginWithMask } from './dist/playground.js'
+        document.getElementById('login').addEventListener('click', loginWithMask)
+    </script>
 </body>
 </html>

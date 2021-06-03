@@ -1,11 +1,11 @@
 /// <reference path="./global.d.ts" />
 import type {
-    _PublicKeyAuthenticatorProtocol,
+    PublicKeyAuthenticatorProtocol,
     _FederatedAuthenticatorProtocol,
     _PasswordAuthenticatorProtocol,
 } from '../types/interface'
 export interface CreateCredentialsContainerOptions {
-    publicKeyAuthenticator?: _PublicKeyAuthenticatorProtocol
+    publicKeyAuthenticator?: PublicKeyAuthenticatorProtocol
     federatedAuthenticator?: _FederatedAuthenticatorProtocol
     passwordAuthenticator?: _PasswordAuthenticatorProtocol
 }
