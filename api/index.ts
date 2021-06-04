@@ -29,6 +29,9 @@ export function createCredentialsContainer(options: CreateCredentialsContainerOp
                 // use passwordAuthenticator
             } else if (pub) {
                 if (fed || password) throw NotSupported(supported)
+                const { publicKeyAuthenticator } = options
+                // todo: add security check function
+                publicKeyAuthenticator!.create(pub, opts.signal)
                 // use publicKeyAuthenticator
             }
             throw NotSupported(supported)

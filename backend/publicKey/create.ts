@@ -1,6 +1,11 @@
 import { bufferSourceToBase64, isRegistrableDomain } from '../util'
 import auth from '../authenticator'
 
+export type CollectedUserData = {
+  username: string
+  id: string
+}
+
 export type CollectedClientData = {
   type: string
   challenge: string
@@ -8,71 +13,62 @@ export type CollectedClientData = {
   crossOrigin: boolean
 }
 
-export function create (
+/**
+ * @this SecurityContext
+ */
+export async function create (
   privateKey: JsonWebKey,
   publicKey: JsonWebKey,
   options: PublicKeyCredentialCreationOptions,
-  signal: AbortSignal): Promise<PublicKeyCredential | null> {
-  let settings = document
-  let sameOriginWithAncestors = isSecureContext
-  if (!sameOriginWithAncestors) {
-    throw new DOMException()
-  }
+  signal?: AbortSignal): Promise<PublicKeyCredential | null> {
   if (auth.findCredential(options)) {
     return new Promise((resolve, reject) => {
       reject(new DOMException('NotSupportedError'))
     })
   }
-  if (signal.aborted) {
+  if (signal?.aborted) {
     return new Promise((resolve, reject) => {
       reject(new DOMException('AbortError'))
     })
   }
-  return new Promise<PublicKeyCredential | null>((resolve, reject) => {
-    // calling createSync
-    const publicKeyCredentialOrError = createSync(
-      privateKey,
-      publicKey,
-      origin,
-      options,
-      sameOriginWithAncestors,
-      signal
-    )
-    if (publicKeyCredentialOrError instanceof Error) {
-      reject(publicKeyCredentialOrError as Error)
-    } else {
-      resolve(publicKeyCredentialOrError as PublicKeyCredential | null)
-    }
-  })
+  return createImpl(
+    privateKey,
+    publicKey,
+    options,
+    signal,
+  )
 }
 
-function createSync (
+/**
+ * @this SecurityContext
+ */
+function createImpl (
   privateKey: JsonWebKey,
   publicKey: JsonWebKey,
-  origin: string,
   options: PublicKeyCredentialCreationOptions,
-  sameOriginWithAncestors: boolean,
-  signal: AbortSignal,
-): PublicKeyCredential | Error | null {
+  signal?: AbortSignal,
+): Promise<PublicKeyCredential | null> {
   const timeout = Math.min(60000 /* 6 seconds */, options.timeout || 0)
+  const abortController = new AbortController()
+  const expiredSignal = abortController.signal
+  let rpID: string = ''
 
-  const hasExpired = () => expired
-  let expired = false
-  setTimeout(() => { expired = true }, timeout)
+  setTimeout(() => abortController.abort(), timeout)
 
   const idLength = options.user.id.byteLength
   if (idLength < 1 || idLength > 64) {
-    throw new TypeError()
+    const error = new TypeError()
+    error.message = 'Incorrect length of `options.user.id`'
   }
   // fixme: incorrect implementation
   const callerOrigin = window.origin
   const effectiveDomain = document.domain
   if (options.rp.id) {
     if (!isRegistrableDomain(options.rp.id, effectiveDomain)) {
-      return new DOMException('SecurityError')
+      throw new DOMException('SecurityError')
     }
   } else {
-    options.rp.id = effectiveDomain
+    rpID = effectiveDomain
   }
 
   let credTypesAndPubKeyAlgs = [] as { type: string, alg: number }[]
@@ -92,23 +88,31 @@ function createSync (
     credTypesAndPubKeyAlgs.push({ type: 'public-key', alg: -7 })  // ES256
     credTypesAndPubKeyAlgs.push({ type: 'public-key', alg: -257 })  // RS256
   }
-  const collectedUserData = {
 
+  const collectedUserData: CollectedUserData = {
+    id: bufferSourceToBase64(options.user.id),
+    username: options.user.name,
   }
   const collectedClientData: CollectedClientData = {
     type: 'webauthn.create',
     challenge: bufferSourceToBase64(options.challenge),
     origin: callerOrigin,
-    crossOrigin: false  // todo: currentLy we not support crossOrigin
+    crossOrigin: false,  // todo: currentLy we not support crossOrigin
   }
 
-  if (signal.aborted) {
-    return new DOMException('AbortError')
+  if (signal?.aborted) {
+    throw new DOMException('AbortError')
   }
-  signal.addEventListener('abort', cleanup)
 
-  if (hasExpired()) {
-    return null
+  signal?.addEventListener('abort', function cleanup() {
+    signal?.removeEventListener('abort', cleanup)
+  })
+  expiredSignal.addEventListener('abort', function cleanup() {
+    expiredSignal.removeEventListener('abort', cleanup)
+  })
+
+  if (expiredSignal.aborted) {
+    return Promise.resolve().then(() => null)
   } else {
     const {
       excludeCredentials,
@@ -167,18 +171,18 @@ function createSync (
         }
       }
       // todo: generate the key
-      const rpID = options.rp.id
-      auth.derivePublicKey(privateKey, publicKey, rpID, {}, collectedClientData)
-      return null
+      return auth.derivePublicKey(
+        privateKey,
+        publicKey,
+        rpID,
+        collectedUserData,
+        collectedClientData,
+        signal,
+      )
     } else {
       // ignore 'cross-platform'
       console.error('not support \'cross-platform\'')
-      return null
+      return Promise.resolve().then(() => null)
     }
-  }
-
-  function cleanup () {
-    // remove this from abort signal
-    signal.removeEventListener('abort', cleanup)
   }
 }

@@ -9,6 +9,7 @@ import {
   IDBPDatabase,
 } from 'idb/with-async-ittr-cjs'
 import type { CollectedClientData } from '../publicKey/create'
+import { encode } from 'cbor-web'
 
 export type WebAuth = {
   domain: string  // unique key
@@ -23,11 +24,6 @@ export interface AuthenticatorDB extends DBSchema {
   }
 }
 
-export interface AuthenticatorResponseData {
-  credentialID: string
-  publicKey: JsonWebKey
-}
-
 // todo
 export type AuthenticatorTask = PublicKeyCredentialCreationOptions
 
@@ -36,7 +32,8 @@ const kRelevantCredentials = Symbol('relevantCredentials')
 
 const supportSet = new Set<number>([-7])
 
-let resolve: (value: IDBPDatabase<AuthenticatorDB>) => void, reject: (reason?: any) => void
+let resolve: (value: IDBPDatabase<AuthenticatorDB>) => void,
+  reject: (reason?: any) => void
 const dbPromise: Promise<IDBPDatabase<AuthenticatorDB>> = new Promise(
   (_resolve, _reject) => {
     resolve = _resolve
@@ -70,12 +67,16 @@ class Authenticator {
   }
 
   public async derivePublicKey (
+    // maskbook provided
     privateKey: JsonWebKey,
     publicKey: JsonWebKey,
+    // user provided
     rpID: string,
     userInfo: any,
-    clientData: CollectedClientData
-  ): Promise<AuthenticatorResponseData> {
+    clientData: CollectedClientData,
+    // other options
+    signal?: AbortSignal,
+  ): Promise<PublicKeyCredential> {
     const aes = 'AES-GCM'
     const length = 256
     // todo
@@ -91,15 +92,41 @@ class Authenticator {
     const t = (await this.db)?.transaction('webAuths', 'readwrite').
       objectStore('webAuths')
     const jwk = await crypto.subtle.exportKey('jwt', key) as JsonWebKey
+    if (signal?.aborted) {
+      throw new DOMException('AbortError')
+    }
+
     t?.add({
       domain: rpID,
       challenge: clientData.challenge,
-      publicKey: jwk
+      publicKey: jwk,
+    })
+
+    const id = `${userInfo.username}+${userInfo.email}`
+    const rawId = new TextEncoder().encode(id)
+
+    const attestationObject = encode({
+      antData: {
+        type: 'buffer',
+        data: [
+          // todo: see references
+          //  https://developer.mozilla.org/en-US/docs/Web/API/AuthenticatorAttestationResponse/attestationObject
+          //  https://w3c.github.io/webauthn/#fig-attStructs
+        ],
+      },
     })
 
     return {
-      credentialID: '',
-      publicKey: jwk
+      id,
+      rawId,
+      response: {
+        clientDataJSON: new ArrayBuffer(0), // todo
+        attestationObject
+      } as AuthenticatorAttestationResponse,
+      type: 'public-key',
+      getClientExtensionResults (): AuthenticationExtensionsClientOutputs {
+        throw new Error('not supported')
+      },
     }
   }
 

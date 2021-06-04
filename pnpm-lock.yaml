@@ -4,6 +4,8 @@ specifiers:
   '@rollup/plugin-sucrase': ^3.1.0
   '@types/jest': ^26.0.23
   '@types/json-stable-stringify': ^1.0.32
+  cbor: ^7.0.5
+  cbor-web: ^7.0.5
   http-server: ^0.12.3
   idb: ^6.1.2
   jest: ^27.0.3
@@ -15,6 +17,7 @@ specifiers:
   typescript: ^4.3.2
 
 dependencies:
+  cbor-web: 7.0.5
   idb: 6.1.2
   json-stable-stringify: 1.0.1
   tslib: 2.2.0
@@ -23,6 +26,7 @@ devDependencies:
   '@rollup/plugin-sucrase': 3.1.0_rollup@2.50.5
   '@types/jest': 26.0.23
   '@types/json-stable-stringify': 1.0.32
+  cbor: 7.0.5
   http-server: 0.12.3
   jest: 27.0.3
   npm-run-all: 4.1.5
@@ -340,6 +344,11 @@ packages:
 
   /@bcoe/v8-coverage/0.2.3:
     resolution: {integrity: sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==}
+    dev: true
+
+  /@cto.af/textdecoder/0.0.0:
+    resolution: {integrity: sha512-sJpx3F5xcVV/9jNYJQtvimo4Vfld/nD3ph+ZWtQzZ03Zo8rJC7QKQTRcIGS13Rcz80DwFNthCWMrd58vpY4ZAQ==}
+    engines: {node: '>=4.9.1'}
     dev: true
 
   /@istanbuljs/load-nyc-config/1.1.0:
@@ -943,6 +952,29 @@ packages:
 
   /caniuse-lite/1.0.30001232:
     resolution: {integrity: sha512-e4Gyp7P8vqC2qV2iHA+cJNf/yqUKOShXQOJHQt81OHxlIZl/j/j3soEA0adAQi8CPUQgvOdDENyQ5kd6a6mNSg==}
+    dev: true
+
+  /cbor-web/7.0.5:
+    resolution: {integrity: sha512-5Eu4lG6A/8wkFRgV3gbDoYMj1tlYQ/MautPq4aPh5Ha/DFGLQtBPE/fT4kdE0ZPt8BubTV4glBnorsAM68/HJQ==}
+    peerDependencies:
+      bignumber.js: ^9.0.1
+    peerDependenciesMeta:
+      bignumber.js:
+        optional: true
+    dev: false
+
+  /cbor/7.0.5:
+    resolution: {integrity: sha512-0aaAPgW92lLmypb9iCd22k7tSD1FbF6dps8VQzmIBKY6ych2gO09b2vo/SbaLTmezJuB8Kh88Rvpl/Uq52mNZg==}
+    engines: {node: '>=10.18.0'}
+    requiresBuild: true
+    peerDependencies:
+      bignumber.js: ^9.0.1
+    peerDependenciesMeta:
+      bignumber.js:
+        optional: true
+    dependencies:
+      '@cto.af/textdecoder': 0.0.0
+      nofilter: 2.0.3
     dev: true
 
   /chalk/2.4.2:
@@ -2438,6 +2470,13 @@ packages:
 
   /node-releases/1.1.72:
     resolution: {integrity: sha512-LLUo+PpH3dU6XizX3iVoubUNheF/owjXCZZ5yACDxNnPtgFuludV1ZL3ayK1kVep42Rmm0+R9/Y60NQbZ2bifw==}
+    dev: true
+
+  /nofilter/2.0.3:
+    resolution: {integrity: sha512-FbuXC+lK+GU2+63D1kC1ETiZo+Z7SIi7B+mxKTCH1byrh6WFvfBCN/wpherFz0a0bjGd7EKTst/cz0yLeNngug==}
+    engines: {node: '>=10.18'}
+    dependencies:
+      '@cto.af/textdecoder': 0.0.0
     dev: true
 
   /normalize-package-data/2.5.0:

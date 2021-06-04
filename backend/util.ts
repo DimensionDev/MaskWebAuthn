@@ -11,7 +11,7 @@ type Algorithms =
   | DhImportKeyParams
   | AesKeyAlgorithm
 
-export function getKeyParameter(
+export function getKeyParameter (
   type: 'ecdh' | 'ecdsa' | 'aes' | 'pbkdf2',
 ): [readonly KeyUsage[], Readonly<Algorithms>] {
   if (type === 'ecdh') return [['deriveKey', 'deriveBits'], { name: 'ECDH', namedCurve: 'K-256' }]
@@ -29,7 +29,7 @@ export function getKeyParameter(
  * @param key - The JsonWebKey
  * @param usage - Usage
  */
-export async function JsonWebKeyToCryptoKey(
+export async function JsonWebKeyToCryptoKey (
   key: JsonWebKey,
   usage: readonly KeyUsage[],
   algorithm: Algorithms,
@@ -54,7 +54,7 @@ export async function JsonWebKeyToCryptoKey(
  * Get a (cached) JsonWebKey from CryptoKey
  * @param key - The CryptoKey
  */
-export async function CryptoKeyToJsonWebKey<T extends JsonWebKey = JsonWebKey>(key: CryptoKey): Promise<T> {
+export async function CryptoKeyToJsonWebKey<T extends JsonWebKey = JsonWebKey> (key: CryptoKey): Promise<T> {
   // Any of nominal subtype of JsonWebKey in this project is runtime equivalent to JsonWebKey
   // so it is safe to do the force cast
   if (JsonWebKeyCache.has(key)) return JsonWebKeyCache.get(key)! as T
@@ -94,5 +94,14 @@ export function isRegistrableDomain (
     return origin.host.endsWith(host.host)
   } else {
     return false
+  }
+}
+
+export function securityCheck (): boolean {
+  if (!isSecureContext()) {
+    return false
+  } else {
+    // todo: check origin and domain
+    return true
   }
 }
