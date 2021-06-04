@@ -6,17 +6,6 @@ export type CollectedClientData = {
   challenge: string
   origin: string
   crossOrigin: boolean
-  tokenBinding: TokenBinding
-}
-
-export type TokenBinding = {
-  status: TokenBindingStatus
-  id?: string
-}
-
-export enum TokenBindingStatus {
-  PRESENT = 'present',
-  SUPPORTED = 'supported'
 }
 
 export function create (
@@ -110,12 +99,7 @@ function createSync (
     type: 'webauthn.create',
     challenge: bufferSourceToBase64(options.challenge),
     origin: callerOrigin,
-    crossOrigin: false, // todo: currentLy we not support crossOrigin
-    tokenBinding: {
-      // fixme: what is this meaning for?
-      status: TokenBindingStatus.PRESENT,
-      /* id: */
-    },
+    crossOrigin: false  // todo: currentLy we not support crossOrigin
   }
 
   if (signal.aborted) {
