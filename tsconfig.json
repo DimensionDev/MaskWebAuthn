@@ -28,6 +28,5 @@
         "noImplicitThis": true,
         "importsNotUsedAsValues": "error",
         "forceConsistentCasingInFileNames": true
-    },
-    "files": []
+    }
 }

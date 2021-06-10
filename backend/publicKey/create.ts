@@ -62,16 +62,18 @@ function createImpl (
   }
   // fixme: incorrect implementation
   const callerOrigin = window.origin
-  const effectiveDomain = document.domain
+  const effectiveDomain = document.domain // current domain
   if (options.rp.id) {
     if (!isRegistrableDomain(options.rp.id, effectiveDomain)) {
       throw new DOMException('SecurityError')
+    } else {
+      rpID = options.rp.id
     }
   } else {
     rpID = effectiveDomain
   }
 
-  let credTypesAndPubKeyAlgs = [] as { type: string, alg: number }[]
+  const credTypesAndPubKeyAlgs = [] as { type: string, alg: number }[]
   // If this array contains multiple elements, they are sorted by descending order of preference.
   if (Array.isArray(options.pubKeyCredParams) &&
     options.pubKeyCredParams.length > 0) {

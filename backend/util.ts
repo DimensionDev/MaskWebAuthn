@@ -88,16 +88,35 @@ export function isRegistrableDomain (
   // refs:
   //  https://html.spec.whatwg.org/multipage/origin.html#is-a-registrable-domain-suffix-of-or-is-equal-to
   //  https://github.com/passwordless-lib/fido2-net-lib/blob/bdad59ec9963c45c07b4c50b95cc3209d763a91e/Src/Fido2/AuthenticatorResponse.cs#L58-L83
-  const host = new URL(hostSuffixString)
-  const origin = new URL(originalHost)
-  if (host.host.startsWith('localhost') && origin.host.startsWith('localhost')) {
+  if (hostSuffixString === '' && originalHost === '') {
+    return false
+  }
+  let host: string = ''
+  let origin: string = ''
+  try {
+    const url = new URL(hostSuffixString)
+    if (url.protocol !== 'https:') {
+      return false
+    }
+    host = url.host
+  } catch (_) {
+    host = hostSuffixString
+  }
+  try {
+    const url = new URL(originalHost)
+    if (url.protocol !== 'https:') {
+      return false
+    }
+    origin = url.host
+  } catch (_) {
+    origin = originalHost
+  }
+
+  if (origin.startsWith('localhost')) {
     // allow localhost
     return true
-  } else if (['https:'].includes(host.protocol)) {
-    // only support 'https' protocol
-    return origin.host.endsWith(host.host)
   } else {
-    return false
+    return host.endsWith(origin)
   }
 }
 

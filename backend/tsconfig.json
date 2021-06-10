@@ -9,6 +9,9 @@
     "rootDir": "./",
     "outDir": "../dist/backend"
   },
+  "exclude": [
+    "__tests__"
+  ],
   "include": [
     "./**/*.ts"
   ]
