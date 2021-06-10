@@ -75,7 +75,7 @@ export const bufferSourceToBase64 = (buffer: BufferSource): string => {
 }
 
 export function isSecureContext (): boolean {
-  if (global && global.isSecureContext) {
+  if (global?.isSecureContext) {
     return true
   } else {
     // todo
@@ -90,7 +90,11 @@ export function isRegistrableDomain (
   //  https://github.com/passwordless-lib/fido2-net-lib/blob/bdad59ec9963c45c07b4c50b95cc3209d763a91e/Src/Fido2/AuthenticatorResponse.cs#L58-L83
   const host = new URL(hostSuffixString)
   const origin = new URL(originalHost)
-  if (['https:', 'http:'].includes(host.protocol)) {
+  if (host.host.startsWith('localhost') && origin.host.startsWith('localhost')) {
+    // allow localhost
+    return true
+  } else if (['https:'].includes(host.protocol)) {
+    // only support 'https' protocol
     return origin.host.endsWith(host.host)
   } else {
     return false
