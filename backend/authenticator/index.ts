@@ -9,7 +9,7 @@ import {
   IDBPDatabase,
 } from 'idb/with-async-ittr-cjs'
 import type { CollectedClientData } from '../publicKey/create'
-import { encode } from 'cbor-web'
+import { encode } from 'cbor-redux'
 
 export type WebAuth = {
   domain: string  // unique key
@@ -112,7 +112,7 @@ class Authenticator {
       fmt: '',
       attStmt: {},
       antData: new Uint8Array()
-    }) as Uint8Array
+    })
 
     const clientDataJSON = new TextEncoder().encode(JSON.stringify({
       challenge: clientData.challenge,  // relying party will check the challenge

@@ -5,7 +5,7 @@ specifiers:
   '@types/jest': ^26.0.23
   '@types/json-stable-stringify': ^1.0.32
   cbor: ^7.0.5
-  cbor-web: ^7.0.5
+  cbor-redux: ^0.3.1
   http-server: ^0.12.3
   idb: ^6.1.2
   jest: ^27.0.3
@@ -17,7 +17,7 @@ specifiers:
   typescript: ^4.3.2
 
 dependencies:
-  cbor-web: 7.0.5
+  cbor-redux: 0.3.1
   idb: 6.1.2
   json-stable-stringify: 1.0.1
   tslib: 2.2.0
@@ -954,13 +954,8 @@ packages:
     resolution: {integrity: sha512-e4Gyp7P8vqC2qV2iHA+cJNf/yqUKOShXQOJHQt81OHxlIZl/j/j3soEA0adAQi8CPUQgvOdDENyQ5kd6a6mNSg==}
     dev: true
 
-  /cbor-web/7.0.5:
-    resolution: {integrity: sha512-5Eu4lG6A/8wkFRgV3gbDoYMj1tlYQ/MautPq4aPh5Ha/DFGLQtBPE/fT4kdE0ZPt8BubTV4glBnorsAM68/HJQ==}
-    peerDependencies:
-      bignumber.js: ^9.0.1
-    peerDependenciesMeta:
-      bignumber.js:
-        optional: true
+  /cbor-redux/0.3.1:
+    resolution: {integrity: sha512-gUKg3J5Lewk7IkQurhrEVPQ3UvZp2e7knK/y7UAuf+RTu7zspOGvmv05ZbXlDkk0nW1EGLEJ2zy+JEksg6n7lQ==}
     dev: false
 
   /cbor/7.0.5:
