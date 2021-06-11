@@ -63,6 +63,7 @@ class Authenticator {
   }
 
   constructor () {
+    // connect database as soon as possible
     const _ = this.db
   }
 
@@ -102,25 +103,28 @@ class Authenticator {
       publicKey: jwk,
     })
 
+    // id includes username and email, then it will save to the local database as the unique key
     const id = `${userInfo.username}+${userInfo.email}`
     const rawId = new TextEncoder().encode(id)
+    const base64ID = bufferSourceToBase64(rawId)
 
     const attestationObject = encode({
-      antData: {
-        type: 'buffer',
-        data: [
-          // todo: see references
-          //  https://developer.mozilla.org/en-US/docs/Web/API/AuthenticatorAttestationResponse/attestationObject
-          //  https://w3c.github.io/webauthn/#fig-attStructs
-        ],
-      },
-    })
+      fmt: '',
+      attStmt: {},
+      antData: new Uint8Array()
+    }) as Uint8Array
+
+    const clientDataJSON = new TextEncoder().encode(JSON.stringify({
+      challenge: clientData.challenge,  // relying party will check the challenge
+      origin: clientData.origin,  // 'https://xxx.xx'
+      type: clientData.type // 'webauthn.create'
+    }))
 
     return {
-      id,
+      id: base64ID,
       rawId,
       response: {
-        clientDataJSON: new ArrayBuffer(0), // todo
+        clientDataJSON,
         attestationObject
       } as AuthenticatorAttestationResponse,
       type: 'public-key',

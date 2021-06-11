@@ -106,10 +106,10 @@ function createImpl (
     throw new DOMException('AbortError')
   }
 
-  signal?.addEventListener('abort', function cleanup() {
+  signal?.addEventListener('abort', function cleanup () {
     signal?.removeEventListener('abort', cleanup)
   })
-  expiredSignal.addEventListener('abort', function cleanup() {
+  expiredSignal.addEventListener('abort', function cleanup () {
     expiredSignal.removeEventListener('abort', cleanup)
   })
 
@@ -167,7 +167,7 @@ function createImpl (
           credential.transports.length > 0
         ) {
           // we dont use this
-        } else {
+        } else if (credential.type === 'public-key') {
           excludeCredentialDescriptorList.push(credential)
           // todo: step 20.8
         }
