@@ -35,7 +35,7 @@ export function hasCredential (options: {}): boolean {
 // todo: this is incorrect
 export async function generateCreationResponse (
   // maskbook provided
-  key: CryptoKeyPair,
+  keys: CryptoKeyPair,
   signCount: number,
   // user provided
   rpID: string,
@@ -44,10 +44,10 @@ export async function generateCreationResponse (
   // other options
   signal?: AbortSignal,
 ): Promise<PublicKeyCredential> {
-  if (!key) {
+  if (!keys) {
     throw new TypeError()
   }
-  const { publicKey } = key
+  const { publicKey } = keys
   const textEncoder = new TextEncoder()
 
   if (signal?.aborted) {
@@ -67,14 +67,14 @@ export async function generateCreationResponse (
       aaugid: '0',
       credentialIdLength: 0,
       credentialId: '',
-      credentialPublicKey: JSON.stringify(key.publicKey),
+      credentialPublicKey: await crypto.subtle.exportKey('raw', keys.publicKey),
     },
     extensions: undefined,
   })
   const signType = algs.find(alg => supportSet.has(alg)) ||
     PublicKeyAlgorithm.ES256
   const signParams = getSignatureParams(signType)
-  const signature = await crypto.subtle.sign(signParams, key.privateKey,
+  const signature = await crypto.subtle.sign(signParams, keys.privateKey,
     antData)
 
   const attestationObject = encode({
