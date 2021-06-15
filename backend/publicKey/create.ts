@@ -1,27 +1,29 @@
-import { bufferSourceToBase64, isRegistrableDomain } from '../util'
-import auth from '../authenticator'
-
-export type CollectedUserData = {
-  username: string
-  id: string
-}
+import { bufferSourceToBase64 } from '../util'
+import {
+  generateCreationResponse,
+  hasCredential,
+  PublicKeyAlgorithm,
+} from '../authenticator'
+import type { CreateAuthenticatorOptions } from '../index'
 
 export type CollectedClientData = {
-  type: string
+  type: 'webauthn.create'
   challenge: string
   origin: string
   crossOrigin: boolean
+  tokenBinding: unknown
 }
 
 /**
- * @this SecurityContext
+ *
+ * https://w3c.github.io/webauthn/#sctn-createCredential
  */
 export async function create (
-  privateKey: JsonWebKey,
-  publicKey: JsonWebKey,
+  createOptions: CreateAuthenticatorOptions,
   options: PublicKeyCredentialCreationOptions,
-  signal?: AbortSignal): Promise<PublicKeyCredential | null> {
-  if (auth.findCredential(options)) {
+  signal?: AbortSignal,
+): Promise<PublicKeyCredential | null> {
+  if (hasCredential(options)) {
     return new Promise((resolve, reject) => {
       reject(new DOMException('NotSupportedError'))
     })
@@ -31,48 +33,15 @@ export async function create (
       reject(new DOMException('AbortError'))
     })
   }
-  return createImpl(
-    privateKey,
-    publicKey,
-    options,
-    signal,
-  )
-}
-
-/**
- * @this SecurityContext
- */
-function createImpl (
-  privateKey: JsonWebKey,
-  publicKey: JsonWebKey,
-  options: PublicKeyCredentialCreationOptions,
-  signal?: AbortSignal,
-): Promise<PublicKeyCredential | null> {
-  const timeout = Math.min(60000 /* 6 seconds */, options.timeout || 0)
+  const normalizedOptions = await createOptions.getNormalizedCreateOptions()
+  const timeout = options.timeout as number
   const abortController = new AbortController()
   const expiredSignal = abortController.signal
-  let rpID: string = ''
+  const rpID = normalizedOptions.rpID
 
   setTimeout(() => abortController.abort(), timeout)
 
-  const idLength = options.user.id.byteLength
-  if (idLength < 1 || idLength > 64) {
-    const error = new TypeError()
-    error.message = 'Incorrect length of `options.user.id`'
-  }
-  // fixme: incorrect implementation
-  const callerOrigin = window.origin
-  const effectiveDomain = document.domain // current domain
-  if (options.rp.id) {
-    if (!isRegistrableDomain(options.rp.id, effectiveDomain)) {
-      throw new DOMException('SecurityError')
-    } else {
-      rpID = options.rp.id
-    }
-  } else {
-    rpID = effectiveDomain
-  }
-
+  // get public key algorithm list
   const credTypesAndPubKeyAlgs = [] as { type: string, alg: number }[]
   // If this array contains multiple elements, they are sorted by descending order of preference.
   if (Array.isArray(options.pubKeyCredParams) &&
@@ -87,19 +56,18 @@ function createImpl (
     }
   } else {
     // default algs
-    credTypesAndPubKeyAlgs.push({ type: 'public-key', alg: -7 })  // ES256
-    credTypesAndPubKeyAlgs.push({ type: 'public-key', alg: -257 })  // RS256
+    credTypesAndPubKeyAlgs.push(
+      { type: 'public-key', alg: PublicKeyAlgorithm.ES256 })
+    credTypesAndPubKeyAlgs.push(
+      { type: 'public-key', alg: PublicKeyAlgorithm.RS256 })
   }
 
-  const collectedUserData: CollectedUserData = {
-    id: bufferSourceToBase64(options.user.id),
-    username: options.user.name,
-  }
   const collectedClientData: CollectedClientData = {
     type: 'webauthn.create',
     challenge: bufferSourceToBase64(options.challenge),
-    origin: callerOrigin,
-    crossOrigin: false,  // todo: currentLy we not support crossOrigin
+    origin: normalizedOptions.rpID,
+    crossOrigin: normalizedOptions.crossOrigin,  // todo: currentLy we not support crossOrigin
+    tokenBinding: null,
   }
 
   if (signal?.aborted) {
@@ -130,8 +98,7 @@ function createImpl (
     // In document, 'platform' means authenticator is bound to the client and is generally not removable.
     //  and 'cross-platform' means a device which may be used across different platform (NFC, USB)
     // However, in our library, 'cross-platform' means that the private key could sync with other platform using network, and vice versa.
-    // todo: currently we only support platform because we have not cloud server yet.
-    if (authenticatorAttachment === 'platform') {
+    if (authenticatorAttachment === 'cross-platform') {
       let requireResidentKey: boolean
       switch (residentKey) {
         case 'required':
@@ -157,33 +124,47 @@ function createImpl (
       // tip: skip enterprise attestation
 
       const excludeCredentialDescriptorList = []
+      let keys: CryptoKeyPair | null = null
       // see https://developer.mozilla.org/en-US/docs/Web/API/PublicKeyCredentialCreationOptions/excludeCredentials
       //  this option used for the server to create new credentials for an existing user.
       //  todo: implement this part
-      for (const credential of options.excludeCredentials || []) {
-        if (
-          credential.transports &&
-          Array.isArray(credential.transports) &&
-          credential.transports.length > 0
-        ) {
-          // we dont use this
-        } else if (credential.type === 'public-key') {
-          excludeCredentialDescriptorList.push(credential)
-          // todo: step 20.8
+      if (Array.isArray(options.excludeCredentials)) {
+        for (const credential of options.excludeCredentials) {
+          if (
+            credential.transports &&
+            Array.isArray(credential.transports) &&
+            credential.transports.length > 0
+          ) {
+            // we dont use this
+          } else if (credential.type === 'public-key') {
+            // step 20.8
+            excludeCredentialDescriptorList.push(credential)
+          }
+        }
+        keys = await createOptions.getKeyPairByKeyWrap(rpID,
+          excludeCredentialDescriptorList.map(item => item.id))
+        if (!keys) {
+          throw new Error('')
         }
       }
-      // todo: generate the key
-      return auth.derivePublicKey(
-        privateKey,
-        publicKey,
+      keys = await createOptions.getResidentKeyPair(rpID)
+      const jwk = await crypto.subtle.exportKey('jwk', keys.publicKey)
+      const signCount = await createOptions.getSignCount(jwk)
+      return generateCreationResponse(
+        keys,
+        signCount,
         rpID,
-        collectedUserData,
         collectedClientData,
+        credTypesAndPubKeyAlgs.map(alg => alg.alg),
         signal,
-      )
+      ).then(response => {
+        // we not guarantee this promise will resolve
+        createOptions.incrementSignCount(jwk).catch(() => {/* ignore error */})
+        return response
+      })
     } else {
-      // ignore 'cross-platform'
-      console.error('not support \'cross-platform\'')
+      // ignore 'platform'
+      console.error('not support \'platform\'')
       return Promise.resolve().then(() => null)
     }
   }

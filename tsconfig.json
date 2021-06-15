@@ -11,7 +11,7 @@
         "useDefineForClassFields": true,
         "stripInternal": true,
         // type
-        "lib": ["DOM", "DOM.Iterable", "ES2019"],
+        "lib": ["DOM", "DOM.Iterable", "ES2019", "ESNext"],
         "skipLibCheck": true,
         // project reference
         "composite": true,

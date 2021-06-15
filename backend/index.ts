@@ -1,21 +1,27 @@
 import type { PublicKeyAuthenticatorProtocol } from '../types/interface'
-import { securityCheck } from './util'
 import { create } from './publicKey'
 
-function wrapSecurityCheck<T extends Function> (fn: T): T {
-  securityCheck()
-  return fn()
+export interface NormalizedCreateOptions {
+  keys: CryptoKeyPair
+  timeout: number
+  rpID: string
+  crossOrigin: boolean
 }
 
 export interface CreateAuthenticatorOptions {
-  privateKey: JsonWebKey
-  publicKey: JsonWebKey
+  getNormalizedCreateOptions(): Promise<NormalizedCreateOptions>
+  //
+  getSignCount(key: JsonWebKey): Promise<number>
+  incrementSignCount(key: JsonWebKey): Promise<void>
+  hasKeyPairKeyWrap(credentialID: BufferSource[]): Promise<boolean>
+  // without username
+  getResidentKeyPair(rpID: string): Promise<CryptoKeyPair>
+  // with username
+  getKeyPairByKeyWrap(rpID: string, credentialID: BufferSource[]): Promise<CryptoKeyPair | null>
 }
 
 export function createPublicKeyAuthenticator (opts: CreateAuthenticatorOptions): PublicKeyAuthenticatorProtocol {
-  const { privateKey, publicKey } = opts
-
   return {
-    create: wrapSecurityCheck(create.bind(undefined, privateKey, publicKey)),
+    create: create.bind(undefined, opts),
   }
 }

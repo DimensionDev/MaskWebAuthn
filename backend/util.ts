@@ -1,85 +1,9 @@
-// copy from: https://github.com/DimensionDev/Maskbook/blob/7390500ffe0c5de9beb04f8f9cf3e67841558554/packages/maskbook/src/utils/type-transform/CryptoKey-JsonWebKey.ts
-import stableStringify from 'json-stable-stringify'
-const CryptoKeyCache = new Map<string, CryptoKey>()
-const JsonWebKeyCache = new WeakMap<CryptoKey, JsonWebKey>()
-
-type Algorithms =
-  | string
-  | RsaHashedImportParams
-  | EcKeyImportParams
-  | HmacImportParams
-  | DhImportKeyParams
-  | AesKeyAlgorithm
-
-export function getKeyParameter (
-  type: 'ecdh' | 'ecdsa' | 'aes' | 'pbkdf2',
-): [readonly KeyUsage[], Readonly<Algorithms>] {
-  if (type === 'ecdh') return [['deriveKey', 'deriveBits'], { name: 'ECDH', namedCurve: 'K-256' }]
-  if (type === 'aes') return [['encrypt', 'decrypt'], { name: 'AES-GCM', length: 256 }]
-  if (type === 'ecdsa') return [['sign', 'verify'], { name: 'ecdsa', namedCurve: 'K-256' }]
-  throw new TypeError('Invalid key type')
-}
-
-/**
- * Get a (cached) CryptoKey from JsonWebKey
- *
- * JsonWebKeyToCryptoKey(key, ...getKeyParameter('aes'))
- *
- * @param algorithm - use which algorithm to import this key, defaults to ECDH K-256
- * @param key - The JsonWebKey
- * @param usage - Usage
- */
-export async function JsonWebKeyToCryptoKey (
-  key: JsonWebKey,
-  usage: readonly KeyUsage[],
-  algorithm: Algorithms,
-): Promise<CryptoKey> {
-  key = { ...key }
-  // ? In some cases the raw JWK stores the usage of "decrypt" only so our full usage will throw an error
-  const usages = [...usage].sort().join(',')
-  if (key.key_ops) {
-    if (key.key_ops.sort().join('.') !== usages) {
-      key.key_ops = [...usage]
-    }
-  }
-  const _key = stableStringify(key) + usages
-  if (CryptoKeyCache.has(_key)) return CryptoKeyCache.get(_key)!
-  const cryptoKey = await crypto.subtle.importKey('jwk', key, algorithm, true, [...usage])
-  CryptoKeyCache.set(_key, cryptoKey)
-  JsonWebKeyCache.set(cryptoKey, key)
-  return cryptoKey
-}
-
-/**
- * Get a (cached) JsonWebKey from CryptoKey
- * @param key - The CryptoKey
- */
-export async function CryptoKeyToJsonWebKey<T extends JsonWebKey = JsonWebKey> (key: CryptoKey): Promise<T> {
-  // Any of nominal subtype of JsonWebKey in this project is runtime equivalent to JsonWebKey
-  // so it is safe to do the force cast
-  if (JsonWebKeyCache.has(key)) return JsonWebKeyCache.get(key)! as T
-  const jwk = await crypto.subtle.exportKey('jwk', key)
-  JsonWebKeyCache.set(key, jwk)
-  const hash = stableStringify(jwk) + [...key.usages].sort().join(',')
-  CryptoKeyCache.set(hash, key)
-  return jwk as T
-}
-
 export const bufferSourceToBase64 = (buffer: BufferSource): string => {
   if (buffer instanceof ArrayBuffer) {
     return btoa(new Uint8Array(buffer).reduce(
       (str, cur) => str + String.fromCharCode(cur), ''))
   } else {
     return bufferSourceToBase64(buffer.buffer)
-  }
-}
-
-export function isSecureContext (): boolean {
-  if (global?.isSecureContext) {
-    return true
-  } else {
-    // todo
-    return true
   }
 }
 
@@ -120,11 +44,62 @@ export function isRegistrableDomain (
   }
 }
 
-export function securityCheck (): boolean {
-  if (!isSecureContext()) {
-    return false
-  } else {
-    // todo: check origin and domain
-    return true
+export async function sha256 (message: string) {
+  const messageBuffer = new TextEncoder().encode(message)
+  const hashBuffer = await crypto.subtle.digest('SHA-256', messageBuffer)
+  const hashArray = Array.from(new Uint8Array(hashBuffer))
+  return hashArray.map(byte => byte.toString(16).padStart(2, '0')).join('')
+}
+
+export enum AuthDataFlag {
+  ED = 1 << 7,
+  AT = 1 << 6,
+  UV = 1 << 2,
+  UP = 1 << 0
+}
+
+export type AuthData = {
+  rpIdHash: string  // sha256 encrypted replying party id
+  flags: AuthDataFlag
+  signCount: number
+  attestedCredentialData: {
+    aaugid: string  // is zero
+    credentialIdLength: number
+    credentialId: string
+    credentialPublicKey: string
   }
+  extensions: unknown // not support yet
+}
+
+export function concatenate (...arrays: ArrayBuffer[]): ArrayBuffer {
+  const buffersLengths = arrays.map(function (b) { return b.byteLength })
+  const totalLength = buffersLengths.reduce((p, c) => p + c, 0)
+  const unit8Arr = new Uint8Array(totalLength)
+  buffersLengths.reduce(function (p, c, i) {
+    unit8Arr.set(new Uint8Array(arrays[i]), p)
+    return p + c
+  }, 0)
+  return unit8Arr.buffer
+}
+
+export function encodeAuthData (authData: AuthData): ArrayBuffer {
+  const textEncoder = new TextEncoder()
+  // set idHash, 32 byte
+  const idHashBuffer = textEncoder.encode(authData.rpIdHash)
+  // set flags, 1 byte
+  const flagsBuffer = new Uint8Array(1)
+  flagsBuffer.set([authData.flags], 1)
+  // set signCount, 4 byte
+  const signCountBuffer = new Uint32Array(1)
+  signCountBuffer.set([authData.signCount], 0)
+  // set attestedCredentialData
+  const { credentialIdLength } = authData.attestedCredentialData
+  const aaguidBuffer = new Uint32Array(4).fill(0) // is zero
+  const credentialIdLengthBuffer = new Uint16Array(1)
+  credentialIdLengthBuffer.set([credentialIdLength], 0)
+  const credentialPublicKeyBuffer = textEncoder.encode(
+    authData.attestedCredentialData.credentialPublicKey)
+  return concatenate(idHashBuffer.buffer, flagsBuffer.buffer,
+    signCountBuffer.buffer, aaguidBuffer.buffer,
+    credentialIdLengthBuffer.buffer, credentialPublicKeyBuffer.buffer)
 }

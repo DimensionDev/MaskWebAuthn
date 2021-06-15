@@ -1,10 +1,29 @@
-import { createCredentialsContainer } from '../api/index'
-import { createPublicKeyAuthenticator } from '../backend/index'
+import { createCredentialsContainer } from '../api'
+import {
+  createPublicKeyAuthenticator,
+  NormalizedCreateOptions,
+} from '../backend'
 
+// todo
 const publicKeyAuthenticator = createPublicKeyAuthenticator({
-  // todo
-  privateKey: {},
-  publicKey: {}
+  hasKeyPairKeyWrap (credentialID: BufferSource[]): Promise<boolean> {
+    throw new Error()
+  },
+  incrementSignCount (key: JsonWebKey): Promise<void> {
+    throw new Error()
+  },
+  getSignCount (key: JsonWebKey): Promise<number> {
+    throw new Error()
+  },
+  getKeyPairByKeyWrap (rpID: string, credentialID: ArrayBuffer[]): Promise<CryptoKeyPair> {
+    throw new Error()
+  },
+  getResidentKeyPair (rpID: string): Promise<CryptoKeyPair> {
+    throw new Error()
+  },
+  getNormalizedCreateOptions (): Promise<NormalizedCreateOptions> {
+    throw new Error()
+  }
 })
 
 const credentialsContainer = createCredentialsContainer(
