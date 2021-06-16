@@ -1,6 +1,9 @@
+import { Buffer } from 'buffer'
+import type { CollectedClientData } from './index'
+
 export const bufferSourceToBase64 = (buffer: BufferSource): string => {
   if (buffer instanceof ArrayBuffer) {
-    return btoa(new Uint8Array(buffer).reduce(
+    return btoa(new Buffer(buffer).reduce(
       (str, cur) => str + String.fromCharCode(cur), ''))
   } else {
     return bufferSourceToBase64(buffer.buffer)
@@ -44,8 +47,87 @@ export function isRegistrableDomain (
   }
 }
 
-export async function sha256 (message: string) {
-  const messageBuffer = new TextEncoder().encode(message)
+export const checkUserVerification = (userVerification: UserVerificationRequirement): boolean => {
+  switch (userVerification) {
+    case 'discouraged':
+      return false
+    case 'preferred':
+    case 'required':
+    default:
+      return true
+  }
+}
+
+export const filterCredentials = (credentials: PublicKeyCredentialDescriptor[]): PublicKeyCredentialDescriptor[] =>
+  credentials.filter(
+    credential => {
+      if (credential.transports &&
+        Array.isArray(credential.transports) &&
+        credential.transports.length > 0) {
+        return false
+      } else {
+        return credential.type === 'public-key'
+      }
+    },
+  )
+
+export const signature = () => {
+
+}
+
+export function serializeCollectedClientData (collectedClientData: CollectedClientData): string {
+  let result = ''
+  result += '{'
+  result += '"type":'
+  result += ccdToString(collectedClientData.type)
+  result += ',"challenge":'
+  result += ccdToString(collectedClientData.challenge)
+  result += ',"origin":'
+  result += ccdToString(collectedClientData.origin)
+  result += ',"crossOrigin":'
+  result += collectedClientData.crossOrigin ? 'true' : 'false'
+  // we dont handle the rest of the client data
+  result += '}'
+  return result
+}
+
+/**
+ * @link https://www.w3.org/TR/webauthn-3/#ccdtostring
+ */
+export function ccdToString (obj: any) {
+  let encoded = ''
+  encoded += '"'
+  const objString = `${obj}`
+  // warning: not support IE 11
+  for (let char of objString) {
+    // check whether char is UTF-16 text
+    // if `char.length > 1`, then it is the UTF-16
+    const charCode: number = char.length > 1 ?
+      parseInt(
+        char.charCodeAt(0).toString(16) + char.charCodeAt(1).toString(16), 16) :
+      char.charCodeAt(0)
+    // 0x20 space
+    // 0x21 !
+    // 0x22 "
+    // 0x5c \
+    if (charCode === 0x0020 || charCode === 0x0021 ||
+      (charCode >= 0x0023 && charCode <= 0x005b) ||
+      (charCode >= 0x005d && charCode <= 0x10ffff)) {
+      encoded += char
+    } else if (charCode === 0x22) {
+      encoded += String.fromCharCode(0x5c, 0x22)  // \"
+    } else if (charCode === 0x5c) {
+      encoded += String.fromCharCode(0x5c, 0x5c) // \\
+    } else {
+      encoded += '\\u' + charCode.toString(16)  // \uxxxx
+    }
+  }
+  encoded += '"'
+  return encoded
+}
+
+export async function sha256 (message: string): Promise<string> {
+  const messageBuffer = Buffer.from(message, 'utf-8')
   const hashBuffer = await crypto.subtle.digest('SHA-256', messageBuffer)
   const hashArray = Array.from(new Uint8Array(hashBuffer))
   return hashArray.map(byte => byte.toString(16).padStart(2, '0')).join('')
@@ -74,18 +156,17 @@ export type AuthData = {
 export function concatenate (...arrays: ArrayBuffer[]): ArrayBuffer {
   const buffersLengths = arrays.map(function (b) { return b.byteLength })
   const totalLength = buffersLengths.reduce((p, c) => p + c, 0)
-  const unit8Arr = new Uint8Array(totalLength)
+  const buffer = new Buffer(totalLength)
   buffersLengths.reduce(function (p, c, i) {
-    unit8Arr.set(new Uint8Array(arrays[i]), p)
+    buffer.set(new Buffer(arrays[i]), p)
     return p + c
   }, 0)
-  return unit8Arr.buffer
+  return buffer.buffer
 }
 
 export function encodeAuthData (authData: AuthData): ArrayBuffer {
-  const textEncoder = new TextEncoder()
   // set idHash, 32 byte
-  const idHashBuffer = textEncoder.encode(authData.rpIdHash)
+  const idHashBuffer = Buffer.from(authData.rpIdHash)
   // set flags, 1 byte
   const flagsBuffer = new Uint8Array(1)
   flagsBuffer.set([authData.flags], 1)

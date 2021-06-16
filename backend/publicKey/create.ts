@@ -1,18 +1,9 @@
-import { bufferSourceToBase64 } from '../util'
 import {
   generateCreationResponse,
-  hasCredential,
   PublicKeyAlgorithm,
 } from '../authenticator'
-import type { CreateAuthenticatorOptions } from '../index'
-
-export type CollectedClientData = {
-  type: 'webauthn.create'
-  challenge: string
-  origin: string
-  crossOrigin: boolean
-  tokenBinding: unknown
-}
+import type { CollectedClientData, CreateAuthenticatorOptions } from '../index'
+import { checkUserVerification, filterCredentials } from '../util'
 
 /**
  *
@@ -23,7 +14,7 @@ export async function create (
   options: PublicKeyCredentialCreationOptions,
   signal?: AbortSignal,
 ): Promise<PublicKeyCredential | null> {
-  if (hasCredential(options)) {
+  if (!await createOptions.hasCredential(options)) {
     return new Promise((resolve, reject) => {
       reject(new DOMException('NotSupportedError'))
     })
@@ -34,16 +25,16 @@ export async function create (
     })
   }
   const normalizedOptions = await createOptions.getNormalizedCreateOptions()
-  const timeout = options.timeout as number
+  const timeout = normalizedOptions.timeout as number
   const abortController = new AbortController()
   const expiredSignal = abortController.signal
   const rpID = normalizedOptions.rpID
 
   setTimeout(() => abortController.abort(), timeout)
 
-  // get public key algorithm list
-  const credTypesAndPubKeyAlgs = [] as { type: string, alg: number }[]
+  const credTypesAndPubKeyAlgorithms = [] as { type: string, alg: number }[]
   // If this array contains multiple elements, they are sorted by descending order of preference.
+  //  We only support `ES256` algorithm
   if (Array.isArray(options.pubKeyCredParams) &&
     options.pubKeyCredParams.length > 0) {
     for (const param of options.pubKeyCredParams) {
@@ -51,24 +42,30 @@ export async function create (
         // we only allow 'public-key'
         // continue
       } else {
-        credTypesAndPubKeyAlgs.push({ type: param.type, alg: param.alg })
+        credTypesAndPubKeyAlgorithms.push({ type: param.type, alg: param.alg })
       }
     }
+    if (
+      !credTypesAndPubKeyAlgorithms.find(
+        alg => alg.alg === PublicKeyAlgorithm.ES256,
+      )
+    ) {
+      throw new TypeError('Not Support Algorithms')
+    }
   } else {
-    // default algs
-    credTypesAndPubKeyAlgs.push(
+    // default algorithm
+    credTypesAndPubKeyAlgorithms.push(
       { type: 'public-key', alg: PublicKeyAlgorithm.ES256 })
-    credTypesAndPubKeyAlgs.push(
-      { type: 'public-key', alg: PublicKeyAlgorithm.RS256 })
   }
 
   const collectedClientData: CollectedClientData = {
     type: 'webauthn.create',
-    challenge: bufferSourceToBase64(options.challenge),
+    challenge: options.challenge,
     origin: normalizedOptions.rpID,
-    crossOrigin: normalizedOptions.crossOrigin,  // todo: currentLy we not support crossOrigin
+    crossOrigin: normalizedOptions.crossOrigin,
     tokenBinding: null,
   }
+  // const collectedClientDataHash: string = await sha256(serializeCollectedClientData(collectedClientData))
 
   if (signal?.aborted) {
     throw new DOMException('AbortError')
@@ -85,62 +82,49 @@ export async function create (
     return Promise.resolve().then(() => null)
   } else {
     const {
-      excludeCredentials,
+      excludeCredentials = [],
       authenticatorSelection = {},
     } = options
     const {
-      authenticatorAttachment = 'platform',
-      requireResidentKey,
-      residentKey,
-      userVerification,
+      authenticatorAttachment = 'cross-platform',
+      requireResidentKey = true,
+      residentKey = 'required',
+      userVerification = 'required',
     } = authenticatorSelection
 
     // In document, 'platform' means authenticator is bound to the client and is generally not removable.
     //  and 'cross-platform' means a device which may be used across different platform (NFC, USB)
     // However, in our library, 'cross-platform' means that the private key could sync with other platform using network, and vice versa.
     if (authenticatorAttachment === 'cross-platform') {
-      let requireResidentKey: boolean
+      let needResidentKey: boolean = requireResidentKey
       switch (residentKey) {
-        case 'required':
         case 'discouraged':
+          throw new TypeError('Not support')
+        case 'required':
         case 'preferred':
         default:
-          requireResidentKey = true
+          needResidentKey = true
           break
       }
-      let needUserVerification: boolean
-      // fixme: what is this?
-      switch (userVerification) {
-        case 'preferred':
-        case 'required':
-          // todo: check authenticator is capable
-          needUserVerification = true
-          break
-        case 'discouraged':
-        default:
-          needUserVerification = false
-          break
+      const needUserVerification = checkUserVerification(userVerification)
+
+      if (!needResidentKey) {
+        throw new TypeError('must require resident key')
+      }
+
+      if (!needUserVerification) {
+        // must allow user verification
+        throw new TypeError('must user verification')
       }
       // tip: skip enterprise attestation
 
-      const excludeCredentialDescriptorList = []
       let keys: CryptoKeyPair | null = null
       // see https://developer.mozilla.org/en-US/docs/Web/API/PublicKeyCredentialCreationOptions/excludeCredentials
       //  this option used for the server to create new credentials for an existing user.
-      //  todo: implement this part
-      if (Array.isArray(options.excludeCredentials)) {
-        for (const credential of options.excludeCredentials) {
-          if (
-            credential.transports &&
-            Array.isArray(credential.transports) &&
-            credential.transports.length > 0
-          ) {
-            // we dont use this
-          } else if (credential.type === 'public-key') {
-            // step 20.8
-            excludeCredentialDescriptorList.push(credential)
-          }
-        }
+      if (Array.isArray(excludeCredentials) && excludeCredentials.length > 0) {
+        const excludeCredentialDescriptorList: PublicKeyCredentialDescriptor[] =
+          filterCredentials(excludeCredentials)
+
         keys = await createOptions.getKeyPairByKeyWrap(rpID,
           excludeCredentialDescriptorList.map(item => item.id))
         if (!keys) {
@@ -148,15 +132,15 @@ export async function create (
         }
       }
       keys = await createOptions.getResidentKeyPair(rpID)
-      const jwk = await crypto.subtle.exportKey('jwk', keys.publicKey)
+      const jwk = await crypto.subtle.exportKey('jwk', keys.privateKey)
       const signCount = await createOptions.getSignCount(jwk)
       return generateCreationResponse(
         keys,
         signCount,
         rpID,
         collectedClientData,
-        credTypesAndPubKeyAlgs.map(alg => alg.alg),
-        signal,
+        credTypesAndPubKeyAlgorithms.map(alg => alg.alg),
+        expiredSignal,
       ).then(response => {
         // we not guarantee this promise will resolve
         createOptions.incrementSignCount(jwk).catch(() => {/* ignore error */})
@@ -164,7 +148,7 @@ export async function create (
       })
     } else {
       // ignore 'platform'
-      console.error('not support \'platform\'')
+      console.error('Not Support \'platform\'')
       return Promise.resolve().then(() => null)
     }
   }

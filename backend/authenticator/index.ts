@@ -1,12 +1,12 @@
 import {
   bufferSourceToBase64, encodeAuthData, sha256,
 } from '../util'
-import type { CollectedClientData } from '../publicKey/create'
+import type { CollectedClientData } from '../'
+import { Buffer } from 'buffer'
 import { encode } from 'cbor-redux'
 
 export enum PublicKeyAlgorithm {
-  ES256 = -7,
-  RS256 = -257,
+  ES256 = -7
 }
 
 export function getSignatureParams (alg: PublicKeyAlgorithm): EcdsaParams | RsaPssParams {
@@ -15,22 +15,12 @@ export function getSignatureParams (alg: PublicKeyAlgorithm): EcdsaParams | RsaP
       name: 'ECDSA',
       hash: 'SHA-256',
     }
-  } else if (alg === PublicKeyAlgorithm.RS256) {
-    return {
-      name: 'RSA-PSS',
-      saltLength: 32,
-    }
   } else {
     throw new TypeError('')
   }
 }
 
-const supportSet = new Set([PublicKeyAlgorithm.ES256, PublicKeyAlgorithm.RS256])
-
-export function hasCredential (options: {}): boolean {
-  // todo
-  return true
-}
+const supportSet = new Set([PublicKeyAlgorithm.ES256])
 
 // todo: this is incorrect
 export async function generateCreationResponse (
@@ -48,7 +38,6 @@ export async function generateCreationResponse (
     throw new TypeError()
   }
   const { publicKey } = keys
-  const textEncoder = new TextEncoder()
 
   if (signal?.aborted) {
     throw new DOMException('AbortError')
@@ -56,7 +45,7 @@ export async function generateCreationResponse (
 
   // id includes username and email, then it will save to the local database as the unique key
   const id = JSON.stringify(publicKey)
-  const rawId = textEncoder.encode(id)
+  const rawId = Buffer.from(id)
   const base64ID = bufferSourceToBase64(rawId)
 
   const antData = encodeAuthData({
@@ -71,8 +60,10 @@ export async function generateCreationResponse (
     },
     extensions: undefined,
   })
-  const signType = algs.find(alg => supportSet.has(alg)) ||
-    PublicKeyAlgorithm.ES256
+  const signType = algs.find(alg => supportSet.has(alg))
+  if(!signType) {
+    throw new Error('Not Support Algorithm')
+  }
   const signParams = getSignatureParams(signType)
   const signature = await crypto.subtle.sign(signParams, keys.privateKey,
     antData)
@@ -86,7 +77,8 @@ export async function generateCreationResponse (
     antData,
   })
 
-  const clientDataJSON = textEncoder.encode(JSON.stringify({
+  // fixme: json key order
+  const clientDataJSON = Buffer.from(JSON.stringify({
     challenge: clientData.challenge,  // relying party will check the challenge
     origin: clientData.origin,  // 'https://xxx.xx'
     type: clientData.type, // 'webauthn.create'

@@ -29,7 +29,7 @@ export function createCredentialsContainer(options: CreateCredentialsContainerOp
                 // use passwordAuthenticator
             } else if (pub) {
                 if (fed || password) throw NotSupported(supported)
-                return publicKeyAuthenticator!.create(pub, opts.signal)
+                return publicKeyAuthenticator!.create(pub as PublicKeyCredentialCreationOptions, opts.signal)
             }
             throw NotSupported(supported)
         },
@@ -47,6 +47,7 @@ export function createCredentialsContainer(options: CreateCredentialsContainerOp
             } else if (pub) {
                 if (fed || password) throw NotSupported(supported)
                 // use publicKeyAuthenticator
+                return publicKeyAuthenticator!.get(pub as PublicKeyCredentialRequestOptions, opts.signal)
             }
             throw NotSupported(supported)
         },

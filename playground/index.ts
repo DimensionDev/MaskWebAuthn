@@ -6,6 +6,9 @@ import {
 
 // todo
 const publicKeyAuthenticator = createPublicKeyAuthenticator({
+  hasCredential (options: PublicKeyCredentialCreationOptions | PublicKeyCredentialRequestOptions): Promise<boolean> {
+    throw new Error()
+  },
   hasKeyPairKeyWrap (credentialID: BufferSource[]): Promise<boolean> {
     throw new Error()
   },

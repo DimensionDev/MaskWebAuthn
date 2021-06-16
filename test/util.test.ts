@@ -1,4 +1,9 @@
-import { concatenate, isRegistrableDomain } from '../backend/util'
+import {
+  ccdToString,
+  concatenate,
+  isRegistrableDomain,
+  serializeCollectedClientData,
+} from '../backend/util'
 
 function parseAuthData (buffer: ArrayBuffer) {
   const textDecoder = new TextDecoder()
@@ -59,6 +64,26 @@ test('is registrable domain', () => {
   expect(isRegistrableDomain('https://test.google.com', 'https://google.com')).
     toBe(true)
   expect(isRegistrableDomain('www.google.com', 'google.com')).toBe(true)
+})
+
+test('serialize collected clientData', () => {
+  const challenge = new Uint8Array(16)
+  challenge.set([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15], 0)
+  expect(serializeCollectedClientData({
+    type: 'webauthn.create',
+    origin: 'https://google.com',
+    crossOrigin: false,
+    challenge: challenge,
+    tokenBinding: undefined,
+  })).toMatchSnapshot('serialized collected client data')
+})
+
+test('ccd to string', () => {
+  expect(ccdToString('http://google.com/foo?=123')).
+    toBe('"http://google.com/foo?=123"')
+  expect(ccdToString('Bob: "你好！"')).toBe('"Bob: \\"你好！\\""')
+  expect(ccdToString('hello, world!')).toBe('"hello, world!"')
+  expect(ccdToString('𩸽')).toBe('"\\ud867de3d"')
 })
 
 test('buffer contact check', () => {
