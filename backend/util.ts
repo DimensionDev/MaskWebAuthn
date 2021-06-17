@@ -71,10 +71,6 @@ export const filterCredentials = (credentials: PublicKeyCredentialDescriptor[]):
     },
   )
 
-export const signature = () => {
-
-}
-
 export function serializeCollectedClientData (collectedClientData: CollectedClientData): string {
   let result = ''
   result += '{'
@@ -126,12 +122,20 @@ export function ccdToString (obj: any) {
   return encoded
 }
 
-export async function sha256 (message: string): Promise<string> {
-  const messageBuffer = Buffer.from(message, 'utf-8')
-  const hashBuffer = await crypto.subtle.digest('SHA-256', messageBuffer)
-  const hashArray = Array.from(new Uint8Array(hashBuffer))
-  return hashArray.map(byte => byte.toString(16).padStart(2, '0')).join('')
+export async function sha256 (message: string | ArrayBuffer): Promise<ArrayBuffer> {
+  let messageBuffer: Buffer
+  if (Buffer.isBuffer(message)) {
+    messageBuffer = Buffer.from(message as ArrayBuffer)
+  } else {
+    messageBuffer = Buffer.from(message as string, 'utf-8')
+  }
+  return crypto.subtle.digest('SHA-256', messageBuffer)
 }
+
+export const arrayBufferToString = (buffer: ArrayBuffer) =>
+  Array.from(new Uint8Array(buffer)).
+    map(byte => byte.toString(16).padStart(2, '0')).
+    join('')
 
 export enum AuthDataFlag {
   ED = 1 << 7,

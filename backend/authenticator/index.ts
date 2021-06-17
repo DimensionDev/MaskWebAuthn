@@ -1,5 +1,10 @@
 import {
-  bufferSourceToBase64, encodeAuthData, sha256,
+  arrayBufferToString,
+  bufferSourceToBase64,
+  concatenate,
+  encodeAuthData,
+  serializeCollectedClientData,
+  sha256,
 } from '../util'
 import type { CollectedClientData } from '../'
 import { Buffer } from 'buffer'
@@ -22,7 +27,6 @@ export function getSignatureParams (alg: PublicKeyAlgorithm): EcdsaParams | RsaP
 
 const supportSet = new Set([PublicKeyAlgorithm.ES256])
 
-// todo: this is incorrect
 export async function generateCreationResponse (
   // maskbook provided
   keys: CryptoKeyPair,
@@ -49,24 +53,32 @@ export async function generateCreationResponse (
   const base64ID = bufferSourceToBase64(rawId)
 
   const antData = encodeAuthData({
-    rpIdHash: await sha256(rpID),
+    rpIdHash: arrayBufferToString(await sha256(rpID)),
     flags: 0,
     signCount,
     attestedCredentialData: {
-      aaugid: '0',
+      aaugid: '0',  // we not support aaguid
       credentialIdLength: 0,
       credentialId: '',
       credentialPublicKey: await crypto.subtle.exportKey('raw', keys.publicKey),
     },
     extensions: undefined,
   })
+
+  const clientDataJson = serializeCollectedClientData({ ...clientData })
+  const clientDataJsonBuffer = Buffer.from(clientDataJson)
+  const clientDataJsonHash = await sha256(clientDataJsonBuffer)
+
+  // start sign
   const signType = algs.find(alg => supportSet.has(alg))
-  if(!signType) {
+  if (!signType) {
     throw new Error('Not Support Algorithm')
   }
   const signParams = getSignatureParams(signType)
+  const signTarget = concatenate(antData, clientDataJsonHash)
   const signature = await crypto.subtle.sign(signParams, keys.privateKey,
-    antData)
+    signTarget)
+  // end sign
 
   const attestationObject = encode({
     fmt: 'packed',
@@ -77,18 +89,11 @@ export async function generateCreationResponse (
     antData,
   })
 
-  // fixme: json key order
-  const clientDataJSON = Buffer.from(JSON.stringify({
-    challenge: clientData.challenge,  // relying party will check the challenge
-    origin: clientData.origin,  // 'https://xxx.xx'
-    type: clientData.type, // 'webauthn.create'
-  }))
-
   return {
     id: base64ID,
     rawId,
     response: {
-      clientDataJSON,
+      clientDataJSON: clientDataJsonBuffer,
       attestationObject,
     } as AuthenticatorAttestationResponse,
     type: 'public-key',
