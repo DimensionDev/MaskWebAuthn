@@ -13,14 +13,12 @@ export interface NormalizedCreateOptions {
 export interface CreateAuthenticatorOptions {
   getNormalizedCreateOptions (): Promise<NormalizedCreateOptions>
 
-  // sign count
-  getSignCount (key: JsonWebKey): Promise<number>
+  // sign count\
+  getSignCount (key: CryptoKey): Promise<number>
 
-  incrementSignCount (key: JsonWebKey): Promise<void>
+  incrementSignCount (key: CryptoKey): Promise<void>
 
   hasCredential (options: PublicKeyCredentialCreationOptions | PublicKeyCredentialRequestOptions): Promise<boolean>
-
-  hasKeyPairKeyWrap (credentialID: BufferSource[]): Promise<boolean>
 
   // without username
   getResidentKeyPair (rpID: string): Promise<CryptoKeyPair>

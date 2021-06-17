@@ -1,5 +1,4 @@
 /* eslint-env jest */
-/* eslint no-bitwise:off */
 import {
   ccdToString,
   concatenate,

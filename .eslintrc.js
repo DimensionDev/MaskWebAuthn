@@ -21,7 +21,7 @@ module.exports = {
     'dot-notation': 'error',
     eqeqeq: 'error',
     'no-undef': 'off',
-    'no-bitwise': 'error',
+    'no-bitwise': 'off',
     'no-debugger': 'error',
     'no-eval': 'error',
     'no-extra-bind': 'error',

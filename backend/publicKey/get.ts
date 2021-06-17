@@ -56,7 +56,7 @@ export async function get (
   }
   keys = await createOptions.getResidentKeyPair(rpID)
   const jwk = await crypto.subtle.exportKey('jwk', keys.privateKey)
-  const signCount = await createOptions.getSignCount(jwk)
+  const signCount = await createOptions.getSignCount(keys.privateKey)
   return generateCreationResponse(
     keys,
     signCount,
@@ -66,7 +66,7 @@ export async function get (
     expiredSignal
   ).then(response => {
     // we not guarantee this promise will resolve
-    createOptions.incrementSignCount(jwk).catch(() => { /* ignore error */ })
+    createOptions.incrementSignCount(keys!.privateKey).catch(() => { /* ignore error */ })
     return response
   })
 }

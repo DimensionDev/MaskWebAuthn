@@ -2,8 +2,9 @@ import {
   generateCreationResponse,
   PublicKeyAlgorithm
 } from '../authenticator'
-import type { CollectedClientData, CreateAuthenticatorOptions } from '../index'
+import type { CreateAuthenticatorOptions } from '../index'
 import { checkUserVerification, filterCredentials } from '../util'
+import type { CollectedClientData } from '../../types/interface'
 
 /**
  *
@@ -136,9 +137,8 @@ export async function create (
           throw new Error('')
         }
       }
-      keys = await createOptions.getResidentKeyPair(rpID)
-      const jwk = await crypto.subtle.exportKey('jwk', keys.privateKey)
-      const signCount = await createOptions.getSignCount(jwk)
+      keys = await createOptions.getResidentKeyPair(rpID) as CryptoKeyPair
+      const signCount = await createOptions.getSignCount(keys.privateKey)
       return generateCreationResponse(
         keys,
         signCount,
@@ -148,7 +148,7 @@ export async function create (
         expiredSignal
       ).then(response => {
         // we not guarantee this promise will resolve
-        createOptions.incrementSignCount(jwk).catch(() => { /* ignore error */ })
+        createOptions.incrementSignCount(keys!.privateKey).catch(() => { /* ignore error */ })
         return response
       })
     } else {

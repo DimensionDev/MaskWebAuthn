@@ -1,9 +1,9 @@
 import { Buffer } from 'buffer'
-import type { CollectedClientData } from './index'
+import type { CollectedClientData } from '../dist/types/interface'
 
 export const bufferSourceToBase64 = (buffer: BufferSource): string => {
   if (buffer instanceof ArrayBuffer) {
-    return btoa(new Buffer(buffer).reduce(
+    return btoa(Buffer.from(buffer).reduce(
       (str, cur) => str + String.fromCharCode(cur), ''))
   } else {
     return bufferSourceToBase64(buffer.buffer)
@@ -160,9 +160,10 @@ export type AuthData = {
 export function concatenate (...arrays: ArrayBuffer[]): ArrayBuffer {
   const buffersLengths = arrays.map(function (b) { return b.byteLength })
   const totalLength = buffersLengths.reduce((p, c) => p + c, 0)
-  const buffer = new Buffer(totalLength)
+  const buffer = Buffer.alloc(totalLength)
   buffersLengths.reduce(function (p, c, i) {
-    buffer.set(new Buffer(arrays[i]), p)
+    // @ts-ignore
+    buffer.set(Buffer.alloc(arrays[i]), p)
     return p + c
   }, 0)
   return buffer.buffer
