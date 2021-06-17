@@ -6,15 +6,15 @@ import {
   serializeCollectedClientData,
   sha256,
 } from '../util'
-import type { CollectedClientData } from '../'
 import { Buffer } from 'buffer'
 import { encode } from 'cbor-redux'
+import type { CollectedClientData } from '../../types/interface'
 
 export enum PublicKeyAlgorithm {
   ES256 = -7
 }
 
-export function getSignatureParams (alg: PublicKeyAlgorithm): EcdsaParams | RsaPssParams {
+export function getSignatureParams (alg: PublicKeyAlgorithm): EcdsaParams {
   if (alg === PublicKeyAlgorithm.ES256) {
     return {
       name: 'ECDSA',

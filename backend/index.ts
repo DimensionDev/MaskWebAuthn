@@ -2,14 +2,6 @@ import type { PublicKeyAuthenticatorProtocol } from '../types/interface'
 import { create } from './publicKey'
 import { get } from './publicKey/get'
 
-export type CollectedClientData = {
-  type: 'webauthn.create' | 'webauthn.get'
-  challenge: BufferSource
-  origin: string
-  crossOrigin: boolean
-  tokenBinding: unknown
-}
-
 export interface NormalizedCreateOptions {
   keys: CryptoKeyPair
   timeout: number

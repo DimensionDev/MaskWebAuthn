@@ -4,3 +4,11 @@ export interface PublicKeyAuthenticatorProtocol {
 }
 export interface _FederatedAuthenticatorProtocol {}
 export interface _PasswordAuthenticatorProtocol {}
+
+export type CollectedClientData = {
+  type: 'webauthn.create' | 'webauthn.get'
+  challenge: BufferSource
+  origin: string
+  crossOrigin: boolean
+  tokenBinding: unknown
+}
