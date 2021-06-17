@@ -1,41 +1,43 @@
+/* eslint-env jest */
+/* eslint no-bitwise:off */
 import {
   ccdToString,
   concatenate,
   isRegistrableDomain,
-  serializeCollectedClientData,
+  serializeCollectedClientData
 } from '../backend/util'
 
 function parseAuthData (buffer: ArrayBuffer) {
   const textDecoder = new TextDecoder()
-  let rpIdHash = buffer.slice(0, 32)
+  const rpIdHash = buffer.slice(0, 32)
   buffer = buffer.slice(32)
   textDecoder.decode(buffer)
 
-  let flagsBuf = buffer.slice(0, 1)
+  const flagsBuf = buffer.slice(0, 1)
   buffer = buffer.slice(1)
-  let flagsInt = new Uint8Array(flagsBuf)[0]
-  let flags = {
+  const flagsInt = new Uint8Array(flagsBuf)[0]
+  const flags = {
     up: !!(flagsInt & 0x01),
     uv: !!(flagsInt & 0x04),
     at: !!(flagsInt & 0x40),
     ed: !!(flagsInt & 0x80),
-    flagsInt,
+    flagsInt
   }
-  let counterBuf = buffer.slice(0, 4)
+  const counterBuf = buffer.slice(0, 4)
   buffer = buffer.slice(4)
 
   let bufferView = new DataView(counterBuf)
-  let counter = bufferView.getUint32(0)
-  let aaguid = undefined
-  let credID = undefined
-  let COSEPublicKey = undefined
+  const counter = bufferView.getUint32(0)
+  let aaguid
+  let credID
+  let COSEPublicKey
   if (flags.at) {
     aaguid = buffer.slice(0, 16)
     buffer = buffer.slice(16)
-    let credIDLenBuf = buffer.slice(0, 2)
+    const credIDLenBuf = buffer.slice(0, 2)
     buffer = buffer.slice(2)
     bufferView = new DataView(credIDLenBuf)
-    let credIDLen = bufferView.getUint16(0)
+    const credIDLen = bufferView.getUint16(0)
     credID = buffer.slice(0, credIDLen)
     buffer = buffer.slice(credIDLen)
     COSEPublicKey = buffer
@@ -48,21 +50,21 @@ function parseAuthData (buffer: ArrayBuffer) {
     counterBuf,
     aaguid,
     credID,
-    COSEPublicKey,
+    COSEPublicKey
   }
 }
 
 test('is registrable domain', () => {
   expect(isRegistrableDomain('', '')).toBe(false)
   expect(isRegistrableDomain('google.com', 'google.cn')).toBe(false)
-  expect(isRegistrableDomain('http://google.com', 'https://google.com')).
-    toBe(false)
+  expect(isRegistrableDomain('http://google.com', 'https://google.com'))
+    .toBe(false)
   expect(isRegistrableDomain('https://foo.google.com', 'google.cn')).toBe(false)
   expect(isRegistrableDomain('https://google.com', 'google.com')).toBe(true)
-  expect(isRegistrableDomain('https://google.com', 'https://google.cn')).
-    toBe(false)
-  expect(isRegistrableDomain('https://test.google.com', 'https://google.com')).
-    toBe(true)
+  expect(isRegistrableDomain('https://google.com', 'https://google.cn'))
+    .toBe(false)
+  expect(isRegistrableDomain('https://test.google.com', 'https://google.com'))
+    .toBe(true)
   expect(isRegistrableDomain('www.google.com', 'google.com')).toBe(true)
 })
 
@@ -74,13 +76,13 @@ test('serialize collected clientData', () => {
     origin: 'https://google.com',
     crossOrigin: false,
     challenge: challenge,
-    tokenBinding: undefined,
+    tokenBinding: undefined
   })).toMatchSnapshot('serialized collected client data')
 })
 
 test('ccd to string', () => {
-  expect(ccdToString('http://google.com/foo?=123')).
-    toBe('"http://google.com/foo?=123"')
+  expect(ccdToString('http://google.com/foo?=123'))
+    .toBe('"http://google.com/foo?=123"')
   expect(ccdToString('Bob: "你好！"')).toBe('"Bob: \\"你好！\\""')
   expect(ccdToString('hello, world!')).toBe('"hello, world!"')
   expect(ccdToString('𩸽')).toBe('"\\ud867de3d"')

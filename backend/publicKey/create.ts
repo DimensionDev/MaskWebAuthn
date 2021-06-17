@@ -1,6 +1,6 @@
 import {
   generateCreationResponse,
-  PublicKeyAlgorithm,
+  PublicKeyAlgorithm
 } from '../authenticator'
 import type { CollectedClientData, CreateAuthenticatorOptions } from '../index'
 import { checkUserVerification, filterCredentials } from '../util'
@@ -12,7 +12,7 @@ import { checkUserVerification, filterCredentials } from '../util'
 export async function create (
   createOptions: CreateAuthenticatorOptions,
   options: PublicKeyCredentialCreationOptions,
-  signal?: AbortSignal,
+  signal?: AbortSignal
 ): Promise<PublicKeyCredential | null> {
   // we dont trust these parameters from upstream
   delete options.timeout
@@ -52,7 +52,7 @@ export async function create (
     }
     if (
       !credTypesAndPubKeyAlgorithms.find(
-        alg => alg.alg === PublicKeyAlgorithm.ES256,
+        alg => alg.alg === PublicKeyAlgorithm.ES256
       )
     ) {
       throw new TypeError('Not Support Algorithms')
@@ -68,7 +68,7 @@ export async function create (
     challenge: options.challenge,
     origin: rpID,
     crossOrigin: normalizedOptions.crossOrigin,
-    tokenBinding: undefined,
+    tokenBinding: undefined
   }
   // const collectedClientDataHash: string = await sha256(serializeCollectedClientData(collectedClientData))
 
@@ -88,13 +88,13 @@ export async function create (
   } else {
     const {
       excludeCredentials = [],
-      authenticatorSelection = {},
+      authenticatorSelection = {}
     } = options
     const {
       authenticatorAttachment = 'cross-platform',
       requireResidentKey = true,
       residentKey = 'required',
-      userVerification = 'required',
+      userVerification = 'required'
     } = authenticatorSelection
 
     // In document, 'platform' means authenticator is bound to the client and is generally not removable.
@@ -145,10 +145,10 @@ export async function create (
         rpID,
         collectedClientData,
         credTypesAndPubKeyAlgorithms.map(alg => alg.alg),
-        expiredSignal,
+        expiredSignal
       ).then(response => {
         // we not guarantee this promise will resolve
-        createOptions.incrementSignCount(jwk).catch(() => {/* ignore error */})
+        createOptions.incrementSignCount(jwk).catch(() => { /* ignore error */ })
         return response
       })
     } else {

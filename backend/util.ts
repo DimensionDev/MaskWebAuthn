@@ -68,7 +68,7 @@ export const filterCredentials = (credentials: PublicKeyCredentialDescriptor[]):
       } else {
         return credential.type === 'public-key'
       }
-    },
+    }
   )
 
 export function serializeCollectedClientData (collectedClientData: CollectedClientData): string {
@@ -95,13 +95,13 @@ export function ccdToString (obj: any) {
   encoded += '"'
   const objString = `${obj}`
   // warning: not support IE 11
-  for (let char of objString) {
+  for (const char of objString) {
     // check whether char is UTF-16 text
     // if `char.length > 1`, then it is the UTF-16
-    const charCode: number = char.length > 1 ?
-      parseInt(
-        char.charCodeAt(0).toString(16) + char.charCodeAt(1).toString(16), 16) :
-      char.charCodeAt(0)
+    const charCode: number = char.length > 1
+      ? parseInt(
+        char.charCodeAt(0).toString(16) + char.charCodeAt(1).toString(16), 16)
+      : char.charCodeAt(0)
     // 0x20 space
     // 0x21 !
     // 0x22 "
@@ -111,11 +111,11 @@ export function ccdToString (obj: any) {
       (charCode >= 0x005d && charCode <= 0x10ffff)) {
       encoded += char
     } else if (charCode === 0x22) {
-      encoded += String.fromCharCode(0x5c, 0x22)  // \"
+      encoded += String.fromCharCode(0x5c, 0x22) // \"
     } else if (charCode === 0x5c) {
       encoded += String.fromCharCode(0x5c, 0x5c) // \\
     } else {
-      encoded += '\\u' + charCode.toString(16)  // \uxxxx
+      encoded += '\\u' + charCode.toString(16) // \uxxxx
     }
   }
   encoded += '"'
@@ -133,9 +133,9 @@ export async function sha256 (message: string | ArrayBuffer): Promise<ArrayBuffe
 }
 
 export const arrayBufferToString = (buffer: ArrayBuffer) =>
-  Array.from(new Uint8Array(buffer)).
-    map(byte => byte.toString(16).padStart(2, '0')).
-    join('')
+  Array.from(new Uint8Array(buffer))
+    .map(byte => byte.toString(16).padStart(2, '0'))
+    .join('')
 
 export enum AuthDataFlag {
   ED = 1 << 7,
@@ -145,11 +145,11 @@ export enum AuthDataFlag {
 }
 
 export type AuthData = {
-  rpIdHash: string  // sha256 encrypted replying party id
+  rpIdHash: string // sha256 encrypted replying party id
   flags: AuthDataFlag
   signCount: number
   attestedCredentialData: {
-    aaugid: string  // is zero
+    aaugid: string // is zero
     credentialIdLength: number
     credentialId: string
     credentialPublicKey: ArrayBuffer

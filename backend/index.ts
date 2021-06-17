@@ -33,6 +33,6 @@ export interface CreateAuthenticatorOptions {
 export function createPublicKeyAuthenticator (opts: CreateAuthenticatorOptions): PublicKeyAuthenticatorProtocol {
   return {
     create: create.bind(undefined, opts),
-    get: get.bind(undefined, opts),
+    get: get.bind(undefined, opts)
   }
 }

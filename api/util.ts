@@ -3,11 +3,11 @@ import type { AttestationObject } from '../types/interface'
 
 export async function verify (
   publicKey: CryptoKey,
-  credential: PublicKeyCredential,
+  credential: PublicKeyCredential
 ): Promise<boolean> {
   const {
     clientDataJSON,
-    attestationObject,
+    attestationObject
   } = (credential.response as AuthenticatorAttestationResponse)
   if (clientDataJSON) {
     // JSON.parse(Buffer.from(clientDataJSON).toString('utf-8')) as CollectedClientData
@@ -17,12 +17,12 @@ export async function verify (
       attestationObject) as AttestationObject
     const { attStmt: { sig: signature } } = decodedAttestationObject
     return crypto.subtle.verify({
-        name: 'ECDSA',
-        hash: 'SHA-256',
-      },
-      publicKey,
-      signature,
-      attestationObject,
+      name: 'ECDSA',
+      hash: 'SHA-256'
+    },
+    publicKey,
+    signature,
+    attestationObject
     )
   }
   // fallback

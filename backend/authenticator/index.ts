@@ -4,12 +4,11 @@ import {
   concatenate,
   encodeAuthData,
   serializeCollectedClientData,
-  sha256,
+  sha256
 } from '../util'
 import { Buffer } from 'buffer'
 import { encode } from 'cbor-redux'
-import type { CollectedClientData } from '../../types/interface'
-import type { AttestationObject } from '../../types/interface'
+import type { CollectedClientData, AttestationObject } from '../../types/interface'
 
 export enum PublicKeyAlgorithm {
   ES256 = -7
@@ -19,7 +18,7 @@ export function getSignatureParams (alg: PublicKeyAlgorithm): EcdsaParams {
   if (alg === PublicKeyAlgorithm.ES256) {
     return {
       name: 'ECDSA',
-      hash: 'SHA-256',
+      hash: 'SHA-256'
     }
   } else {
     throw new TypeError('')
@@ -37,7 +36,7 @@ export async function generateCreationResponse (
   clientData: CollectedClientData,
   algs: number[],
   // other options
-  signal?: AbortSignal,
+  signal?: AbortSignal
 ): Promise<PublicKeyCredential> {
   if (!keys) {
     throw new TypeError()
@@ -58,12 +57,12 @@ export async function generateCreationResponse (
     flags: 0,
     signCount,
     attestedCredentialData: {
-      aaugid: '0',  // we not support aaguid
+      aaugid: '0', // we not support aaguid
       credentialIdLength: 0,
       credentialId: '',
-      credentialPublicKey: await crypto.subtle.exportKey('raw', keys.publicKey),
+      credentialPublicKey: await crypto.subtle.exportKey('raw', keys.publicKey)
     },
-    extensions: undefined,
+    extensions: undefined
   })
 
   const clientDataJson = serializeCollectedClientData({ ...clientData })
@@ -85,9 +84,9 @@ export async function generateCreationResponse (
     fmt: 'packed',
     attStmt: {
       alg: signType,
-      sig: signature,
+      sig: signature
     },
-    antData,
+    antData
   } as AttestationObject)
 
   return {
@@ -95,12 +94,11 @@ export async function generateCreationResponse (
     rawId,
     response: {
       clientDataJSON: clientDataJsonBuffer,
-      attestationObject,
+      attestationObject
     } as AuthenticatorAttestationResponse,
     type: 'public-key',
     getClientExtensionResults (): AuthenticationExtensionsClientOutputs {
       throw new Error('not supported')
-    },
+    }
   }
 }
-

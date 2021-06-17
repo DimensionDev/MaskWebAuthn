@@ -1,7 +1,7 @@
 import { createCredentialsContainer } from '../api'
 import {
   createPublicKeyAuthenticator,
-  NormalizedCreateOptions,
+  NormalizedCreateOptions
 } from '../backend'
 
 // todo

@@ -6,7 +6,7 @@ import type { CollectedClientData } from '../../types/interface'
 export async function get (
   createOptions: CreateAuthenticatorOptions,
   options: PublicKeyCredentialRequestOptions,
-  signal?: AbortSignal,
+  signal?: AbortSignal
 ) {
   // we dont trust these parameters from upstream
   delete options.timeout
@@ -29,13 +29,13 @@ export async function get (
     challenge: normalizedOptions.challenge,
     origin: normalizedOptions.rpID,
     crossOrigin: normalizedOptions.crossOrigin,
-    tokenBinding: null,
+    tokenBinding: null
   }
   const { userVerification, allowCredentials } = options
   // const collectedClientDataHash: string = await sha256(serializeCollectedClientData(collectedClientData))
 
   const needUserVerification = checkUserVerification(
-    userVerification || 'preferred',
+    userVerification || 'preferred'
   )
   if (!needUserVerification) {
     // must allow user verification
@@ -63,10 +63,10 @@ export async function get (
     rpID,
     collectedClientData,
     [],
-    expiredSignal,
+    expiredSignal
   ).then(response => {
     // we not guarantee this promise will resolve
-    createOptions.incrementSignCount(jwk).catch(() => {/* ignore error */})
+    createOptions.incrementSignCount(jwk).catch(() => { /* ignore error */ })
     return response
   })
 }
