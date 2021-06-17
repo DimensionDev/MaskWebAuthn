@@ -1,4 +1,5 @@
 import { decode } from 'cbor-redux'
+import type { AttestationObject } from '../types/interface'
 
 export async function verify (
   publicKey: CryptoKey,
@@ -12,14 +13,8 @@ export async function verify (
     // JSON.parse(Buffer.from(clientDataJSON).toString('utf-8')) as CollectedClientData
   }
   if (attestationObject) {
-    const decodedAttestationObject = decode(attestationObject) as {
-      fmt: string,
-      attStmt: {
-        alg: number,
-        sig: ArrayBuffer
-      },
-      antData: ArrayBuffer
-    }
+    const decodedAttestationObject = decode(
+      attestationObject) as AttestationObject
     const { attStmt: { sig: signature } } = decodedAttestationObject
     return crypto.subtle.verify({
         name: 'ECDSA',

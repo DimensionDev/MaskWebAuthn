@@ -12,3 +12,12 @@ export type CollectedClientData = {
   crossOrigin: boolean
   tokenBinding: unknown
 }
+
+export type AttestationObject = {
+  fmt: string,
+  attStmt: {
+    alg: number,
+    sig: ArrayBuffer
+  },
+  antData: ArrayBuffer
+}

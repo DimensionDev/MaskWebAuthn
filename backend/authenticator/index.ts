@@ -9,6 +9,7 @@ import {
 import { Buffer } from 'buffer'
 import { encode } from 'cbor-redux'
 import type { CollectedClientData } from '../../types/interface'
+import type { AttestationObject } from '../../types/interface'
 
 export enum PublicKeyAlgorithm {
   ES256 = -7
@@ -87,7 +88,7 @@ export async function generateCreationResponse (
       sig: signature,
     },
     antData,
-  })
+  } as AttestationObject)
 
   return {
     id: base64ID,
