@@ -7,7 +7,7 @@ export async function get (
   options: PublicKeyCredentialRequestOptions,
   signal?: AbortSignal,
 ) {
-  // we dont accept these from relying party
+  // we dont trust these parameters from upstream
   delete options.timeout
   delete options.rpId
   if (!await createOptions.hasCredential(options)) {
@@ -25,16 +25,16 @@ export async function get (
 
   const collectedClientData: CollectedClientData = {
     type: 'webauthn.get',
-    challenge: options.challenge,
+    challenge: normalizedOptions.challenge,
     origin: normalizedOptions.rpID,
     crossOrigin: normalizedOptions.crossOrigin,
     tokenBinding: null,
   }
-  const { userVerification } = options
+  const { userVerification, allowCredentials } = options
   // const collectedClientDataHash: string = await sha256(serializeCollectedClientData(collectedClientData))
 
   const needUserVerification = checkUserVerification(
-    options.userVerification || 'preferred',
+    userVerification || 'preferred',
   )
   if (!needUserVerification) {
     // must allow user verification
@@ -44,9 +44,9 @@ export async function get (
   let keys: CryptoKeyPair | null = null
   // see https://developer.mozilla.org/en-US/docs/Web/API/PublicKeyCredentialCreationOptions/excludeCredentials
   //  this option used for the server to create new credentials for an existing user.
-  if (Array.isArray(options.allowCredentials)) {
+  if (Array.isArray(allowCredentials)) {
     const excludeCredentialDescriptorList: PublicKeyCredentialDescriptor[] =
-      filterCredentials(options.allowCredentials)
+      filterCredentials(allowCredentials)
     keys = await createOptions.getKeyPairByKeyWrap(rpID,
       excludeCredentialDescriptorList.map(item => item.id))
     if (!keys) {

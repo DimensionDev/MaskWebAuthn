@@ -14,6 +14,9 @@ export async function create (
   options: PublicKeyCredentialCreationOptions,
   signal?: AbortSignal,
 ): Promise<PublicKeyCredential | null> {
+  // we dont trust these parameters from upstream
+  delete options.timeout
+  delete options.rp.id
   if (!await createOptions.hasCredential(options)) {
     return new Promise((resolve, reject) => {
       reject(new DOMException('NotSupportedError'))
@@ -24,11 +27,13 @@ export async function create (
       reject(new DOMException('AbortError'))
     })
   }
-  const normalizedOptions = await createOptions.getNormalizedCreateOptions()
+  const {
+    rpID,
+    ...normalizedOptions
+  } = await createOptions.getNormalizedCreateOptions()
   const timeout = normalizedOptions.timeout as number
   const abortController = new AbortController()
   const expiredSignal = abortController.signal
-  const rpID = normalizedOptions.rpID
 
   setTimeout(() => abortController.abort(), timeout)
 
@@ -61,9 +66,9 @@ export async function create (
   const collectedClientData: CollectedClientData = {
     type: 'webauthn.create',
     challenge: options.challenge,
-    origin: normalizedOptions.rpID,
+    origin: rpID,
     crossOrigin: normalizedOptions.crossOrigin,
-    tokenBinding: null,
+    tokenBinding: undefined,
   }
   // const collectedClientDataHash: string = await sha256(serializeCollectedClientData(collectedClientData))
 
