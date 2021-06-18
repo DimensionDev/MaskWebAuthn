@@ -1,6 +1,4 @@
 import {
-  arrayBufferToString,
-  bufferSourceToBase64,
   concatenate,
   encodeAuthData,
   serializeCollectedClientData,
@@ -39,28 +37,23 @@ export async function generateCreationResponse (
   // other options
   signal?: AbortSignal
 ): Promise<PublicKeyCredential> {
-  if (!keys) {
-    throw new TypeError()
-  }
-  const { publicKey } = keys
+  const { publicKey, privateKey } = keys
 
   if (signal?.aborted) {
     throw new DOMException('AbortError')
   }
 
-  // id includes username and email, then it will save to the local database as the unique key
-  const id = JSON.stringify(publicKey)
-  const rawId = Buffer.from(id)
-  const base64ID = bufferSourceToBase64(rawId)
+  const rawPublicKey = await crypto.subtle.exportKey('raw', publicKey)
+  const idBuffer = Buffer.from(rawPublicKey)
 
   const antData = encodeAuthData({
-    rpIdHash: arrayBufferToString(await sha256(rpID)),
+    rpIdHash: Buffer.from(await sha256(Buffer.from(rpID, 'utf-8'))).toString('utf-8'),
     flags: 0,
     signCount,
     attestedCredentialData: {
       aaugid: '0', // we not support aaguid
       credentialId,
-      credentialPublicKey: await crypto.subtle.exportKey('raw', keys.publicKey)
+      credentialPublicKey: await crypto.subtle.exportKey('raw', publicKey)
     },
     extensions: undefined
   })
@@ -76,8 +69,7 @@ export async function generateCreationResponse (
   }
   const signParams = getSignatureParams(signType)
   const signTarget = concatenate(antData, clientDataJsonHash)
-  const signature = await crypto.subtle.sign(signParams, keys.privateKey,
-    signTarget)
+  const signature = await crypto.subtle.sign(signParams, privateKey, signTarget)
   // end sign
 
   const attestationObject = encode({
@@ -90,8 +82,8 @@ export async function generateCreationResponse (
   } as AttestationObject)
 
   return {
-    id: base64ID,
-    rawId,
+    id: idBuffer.toString('base64'),
+    rawId: idBuffer.buffer,
     response: {
       clientDataJSON: clientDataJsonBuffer,
       attestationObject

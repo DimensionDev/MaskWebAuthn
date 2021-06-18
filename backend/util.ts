@@ -1,15 +1,6 @@
 import { Buffer } from 'buffer'
 import type { CollectedClientData } from '../dist/types/interface'
 
-export const bufferSourceToBase64 = (buffer: BufferSource): string => {
-  if (buffer instanceof ArrayBuffer) {
-    return btoa(Buffer.from(buffer).reduce(
-      (str, cur) => str + String.fromCharCode(cur), ''))
-  } else {
-    return bufferSourceToBase64(buffer.buffer)
-  }
-}
-
 export function isRegistrableDomain (
   hostSuffixString: string, originalHost: string): boolean {
   // refs:
@@ -76,8 +67,11 @@ export function serializeCollectedClientData (collectedClientData: CollectedClie
   result += '{'
   result += '"type":'
   result += ccdToString(collectedClientData.type)
-  result += ',"challenge":'
-  result += ccdToString(collectedClientData.challenge)
+  result += ',"challenge":{'
+  result += '"type":"Buffer",'
+  result += '"data":['
+  result += ccdToString(collectedClientData.challenge).slice(1, -1)
+  result += ']}'
   result += ',"origin":'
   result += ccdToString(collectedClientData.origin)
   result += ',"crossOrigin":'
@@ -122,20 +116,9 @@ export function ccdToString (obj: any) {
   return encoded
 }
 
-export async function sha256 (message: string | ArrayBuffer): Promise<ArrayBuffer> {
-  let messageBuffer: Buffer
-  if (Buffer.isBuffer(message)) {
-    messageBuffer = Buffer.from(message as ArrayBuffer)
-  } else {
-    messageBuffer = Buffer.from(message as string, 'utf-8')
-  }
-  return crypto.subtle.digest('SHA-256', messageBuffer)
+export async function sha256 (message: ArrayBuffer): Promise<ArrayBuffer> {
+  return crypto.subtle.digest('SHA-256', message)
 }
-
-export const arrayBufferToString = (buffer: ArrayBuffer) =>
-  Array.from(new Uint8Array(buffer))
-    .map(byte => byte.toString(16).padStart(2, '0'))
-    .join('')
 
 export enum AuthDataFlag {
   ED = 1 << 7,
@@ -161,8 +144,7 @@ export function concatenate (...arrays: ArrayBuffer[]): ArrayBuffer {
   const totalLength = buffersLengths.reduce((p, c) => p + c, 0)
   const buffer = Buffer.alloc(totalLength)
   buffersLengths.reduce(function (p, c, i) {
-    // @ts-ignore
-    buffer.set(Buffer.alloc(arrays[i]), p)
+    buffer.set(Buffer.from(arrays[i]), p)
     return p + c
   }, 0)
   return buffer.buffer
@@ -173,7 +155,7 @@ export function encodeAuthData (authData: AuthData): ArrayBuffer {
   const idHashBuffer = Buffer.from(authData.rpIdHash)
   // set flags, 1 byte
   const flagsBuffer = new Uint8Array(1)
-  flagsBuffer.set([authData.flags], 1)
+  flagsBuffer.set([authData.flags], 0)
   // set signCount, 4 byte
   const signCountBuffer = new Uint32Array(1)
   signCountBuffer.set([authData.signCount], 0)
