@@ -125,21 +125,23 @@ export async function create (
       // tip: skip enterprise attestation
 
       let keys: CryptoKeyPair | null = null
+      let credentialID: ArrayBuffer | null = null
       // see https://developer.mozilla.org/en-US/docs/Web/API/PublicKeyCredentialCreationOptions/excludeCredentials
       //  this option used for the server to create new credentials for an existing user.
       if (Array.isArray(excludeCredentials) && excludeCredentials.length > 0) {
         const excludeCredentialDescriptorList: PublicKeyCredentialDescriptor[] =
           filterCredentials(excludeCredentials)
 
-        keys = await createOptions.getKeyPairByKeyWrap(rpID,
+        ;[keys, credentialID] = await createOptions.getKeyPairByKeyWrap(rpID,
           excludeCredentialDescriptorList.map(item => item.id))
         if (!keys) {
           throw new Error('')
         }
       }
-      keys = await createOptions.getResidentKeyPair(rpID) as CryptoKeyPair
+      [keys, credentialID] = await createOptions.getResidentKeyPair(rpID)
       const signCount = await createOptions.getSignCount(keys.privateKey)
       return generateCreationResponse(
+        credentialID,
         keys,
         signCount,
         rpID,
@@ -148,7 +150,8 @@ export async function create (
         expiredSignal
       ).then(response => {
         // we not guarantee this promise will resolve
-        createOptions.incrementSignCount(keys!.privateKey).catch(() => { /* ignore error */ })
+        createOptions.incrementSignCount(keys!.privateKey)
+          .catch(() => { /* ignore error */ })
         return response
       })
     } else {

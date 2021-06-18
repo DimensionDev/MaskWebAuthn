@@ -43,21 +43,22 @@ export async function get (
   }
 
   let keys: CryptoKeyPair | null = null
+  let credentialID: ArrayBuffer | null = null
   // see https://developer.mozilla.org/en-US/docs/Web/API/PublicKeyCredentialCreationOptions/excludeCredentials
   //  this option used for the server to create new credentials for an existing user.
   if (Array.isArray(allowCredentials)) {
     const excludeCredentialDescriptorList: PublicKeyCredentialDescriptor[] =
       filterCredentials(allowCredentials)
-    keys = await createOptions.getKeyPairByKeyWrap(rpID,
+    ;[keys, credentialID] = await createOptions.getKeyPairByKeyWrap(rpID,
       excludeCredentialDescriptorList.map(item => item.id))
     if (!keys) {
       throw new Error('')
     }
   }
-  keys = await createOptions.getResidentKeyPair(rpID)
-  const jwk = await crypto.subtle.exportKey('jwk', keys.privateKey)
+  [keys, credentialID] = await createOptions.getResidentKeyPair(rpID)
   const signCount = await createOptions.getSignCount(keys.privateKey)
   return generateCreationResponse(
+    credentialID,
     keys,
     signCount,
     rpID,

@@ -29,6 +29,7 @@ const supportSet = new Set([PublicKeyAlgorithm.ES256])
 
 export async function generateCreationResponse (
   // maskbook provided
+  credentialId: ArrayBuffer,
   keys: CryptoKeyPair,
   signCount: number,
   // user provided
@@ -58,8 +59,7 @@ export async function generateCreationResponse (
     signCount,
     attestedCredentialData: {
       aaugid: '0', // we not support aaguid
-      credentialIdLength: 0,
-      credentialId: '',
+      credentialId,
       credentialPublicKey: await crypto.subtle.exportKey('raw', keys.publicKey)
     },
     extensions: undefined

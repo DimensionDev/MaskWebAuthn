@@ -150,8 +150,7 @@ export type AuthData = {
   signCount: number
   attestedCredentialData: {
     aaugid: string // is zero
-    credentialIdLength: number
-    credentialId: string
+    credentialId: ArrayBuffer
     credentialPublicKey: ArrayBuffer
   }
   extensions: unknown // not support yet
@@ -179,12 +178,17 @@ export function encodeAuthData (authData: AuthData): ArrayBuffer {
   const signCountBuffer = new Uint32Array(1)
   signCountBuffer.set([authData.signCount], 0)
   // set attestedCredentialData
-  const { credentialIdLength } = authData.attestedCredentialData
+  const { credentialId, credentialPublicKey } = authData.attestedCredentialData
   const aaguidBuffer = new Uint32Array(4).fill(0) // is zero
   const credentialIdLengthBuffer = new Uint16Array(1)
-  credentialIdLengthBuffer.set([credentialIdLength], 0)
-  const credentialPublicKeyBuffer = authData.attestedCredentialData.credentialPublicKey
-  return concatenate(idHashBuffer.buffer, flagsBuffer.buffer,
-    signCountBuffer.buffer, aaguidBuffer.buffer,
-    credentialIdLengthBuffer.buffer, credentialPublicKeyBuffer)
+  credentialIdLengthBuffer.set([credentialId.byteLength], 0)
+  return concatenate(
+    idHashBuffer.buffer,
+    flagsBuffer.buffer,
+    signCountBuffer.buffer,
+    aaguidBuffer.buffer,
+    credentialIdLengthBuffer.buffer,
+    credentialId,
+    credentialPublicKey
+  )
 }

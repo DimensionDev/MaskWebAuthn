@@ -21,11 +21,13 @@ export interface CreateAuthenticatorOptions {
   hasCredential (options: PublicKeyCredentialCreationOptions | PublicKeyCredentialRequestOptions): Promise<boolean>
 
   // without username
-  getResidentKeyPair (rpID: string): Promise<CryptoKeyPair>
+  getResidentKeyPair (rpID: string): Promise<readonly [key: CryptoKeyPair, credentialID: ArrayBuffer]>
 
   // with username
   getKeyPairByKeyWrap (
-    rpID: string, credentialID: BufferSource[]): Promise<CryptoKeyPair | null>
+    rpID: string,
+    credentialIDs: BufferSource[],
+  ): Promise<readonly [key: CryptoKeyPair | null, credentialID: ArrayBuffer]>
 }
 
 export function createPublicKeyAuthenticator (opts: CreateAuthenticatorOptions): PublicKeyAuthenticatorProtocol {
