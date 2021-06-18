@@ -4,28 +4,58 @@ import {
   NormalizedCreateOptions
 } from '../backend'
 
+const publicKeyCredentialOptionsMap = new Set<any>()
+const keyCounter = new WeakMap<CryptoKey, number>()
+const keys = await crypto.subtle.generateKey(
+  { name: 'ECDH', namedCurve: 'P-256' },
+  true,
+  ['encrypt', 'decrypt', 'sign', 'verify']
+)
+const credentialID = new Uint8Array(16).fill(0x11).buffer
+const challenge = new Uint8Array(16).map((_, index) => index % 8)
+
 // todo
 const publicKeyAuthenticator = createPublicKeyAuthenticator({
   hasCredential (options: PublicKeyCredentialCreationOptions | PublicKeyCredentialRequestOptions): Promise<boolean> {
-    throw new Error()
+    return new Promise<boolean>(resolve => {
+      if (publicKeyCredentialOptionsMap.has(options)) {
+        resolve(true)
+      } else {
+        publicKeyCredentialOptionsMap.add(options)
+        resolve(false)
+      }
+    })
   },
-  hasKeyPairKeyWrap (credentialID: BufferSource[]): Promise<boolean> {
-    throw new Error()
+  incrementSignCount (key: CryptoKey): Promise<void> {
+    keyCounter.set(key, (keyCounter.get(key) || 0) + 2)
+    return Promise.resolve()
   },
-  incrementSignCount (key: JsonWebKey): Promise<void> {
-    throw new Error()
+  getSignCount (key: CryptoKey): Promise<number> {
+    return new Promise(resolve => {
+      const count = keyCounter.get(key)
+      if (!count) {
+        throw new Error('Not Found')
+      }
+      resolve(count)
+    })
   },
-  getSignCount (key: JsonWebKey): Promise<number> {
-    throw new Error()
+  getKeyPairByKeyWrap (
+    rpID: string,
+    credentialIDs: ArrayBuffer[]): Promise<[CryptoKeyPair, ArrayBuffer]> {
+    return Promise.resolve([keys, credentialID])
   },
-  getKeyPairByKeyWrap (rpID: string, credentialID: ArrayBuffer[]): Promise<CryptoKeyPair> {
-    throw new Error()
+  getResidentKeyPair (rpID: string): Promise<[CryptoKeyPair, ArrayBuffer]> {
+    return Promise.resolve([keys, credentialID])
   },
-  getResidentKeyPair (rpID: string): Promise<CryptoKeyPair> {
-    throw new Error()
-  },
-  getNormalizedCreateOptions (): Promise<NormalizedCreateOptions> {
-    throw new Error()
+  async getNormalizedCreateOptions (): Promise<NormalizedCreateOptions> {
+    const k = await keys
+    return Promise.resolve().then(() => ({
+      keys: k,
+      timeout: 1000 * 6,
+      rpID: 'https://localhost:8080',
+      challenge: challenge,
+      crossOrigin: false
+    }))
   }
 })
 
