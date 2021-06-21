@@ -25,19 +25,6 @@ dist/*
 .env.test.local
 .env.production.local
 
-# Block-chain contract files
-/contracts
-
-# E2E tests
-/.env/e2e-test
-/.env/e2e-development
-/.env/e2e-production
-/.pptr-alice
-/.pptr-bob
-/screenshots
-/.env
-/.pptr-*
-
 # Following content is copied from https://github.com/github/gitignore/blob/master/Node.gitignore
 # Logs
 logs
