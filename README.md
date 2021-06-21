@@ -1,7 +1,6 @@
 # MaskWebAuthn
 
-`MaskWebAuthn` is a `WebAuthn-like` APIs.
-It acts as an authenticator in the login process.
+`MaskWebAuthn` is a library that implements WebAuthn API interface.
 
 ## Usage
 
