@@ -1,0 +1,7 @@
+*.d.ts
+build/
+dist/
+e2e
+package.json
+public/
+scripts/
