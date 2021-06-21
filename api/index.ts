@@ -1,14 +1,16 @@
 /// <reference path="./global.d.ts" />
 import type {
-    _PublicKeyAuthenticatorProtocol,
+    PublicKeyAuthenticatorProtocol,
     _FederatedAuthenticatorProtocol,
     _PasswordAuthenticatorProtocol,
 } from '../types/interface'
+
 export interface CreateCredentialsContainerOptions {
-    publicKeyAuthenticator?: _PublicKeyAuthenticatorProtocol
+    publicKeyAuthenticator?: PublicKeyAuthenticatorProtocol
     federatedAuthenticator?: _FederatedAuthenticatorProtocol
     passwordAuthenticator?: _PasswordAuthenticatorProtocol
 }
+
 export function createCredentialsContainer(options: CreateCredentialsContainerOptions): CredentialsContainer {
     const { federatedAuthenticator, passwordAuthenticator, publicKeyAuthenticator } = options
     const supported: string[] = []
@@ -17,9 +19,9 @@ export function createCredentialsContainer(options: CreateCredentialsContainerOp
     if (publicKeyAuthenticator) supported.push('publicKey')
     return {
         async create(opts = {}) {
-            const fed = federatedAuthenticator ? opts.federated : void 0
-            const password = passwordAuthenticator ? opts.password : void 0
-            const pub = publicKeyAuthenticator ? opts.publicKey : void 0
+            const fed = federatedAuthenticator ? opts.federated : undefined
+            const password = passwordAuthenticator ? opts.password : undefined
+            const pub = publicKeyAuthenticator ? opts.publicKey : undefined
 
             if (fed) {
                 if (password || pub) throw NotSupported(supported)
@@ -29,14 +31,14 @@ export function createCredentialsContainer(options: CreateCredentialsContainerOp
                 // use passwordAuthenticator
             } else if (pub) {
                 if (fed || password) throw NotSupported(supported)
-                // use publicKeyAuthenticator
+                return publicKeyAuthenticator!.create(pub as PublicKeyCredentialCreationOptions, opts.signal)
             }
             throw NotSupported(supported)
         },
         async get(opts = {}) {
-            const fed = federatedAuthenticator ? opts.federated : void 0
-            const password = passwordAuthenticator ? opts.password : void 0
-            const pub = publicKeyAuthenticator ? opts.publicKey : void 0
+            const fed = federatedAuthenticator ? opts.federated : undefined
+            const password = passwordAuthenticator ? opts.password : undefined
+            const pub = publicKeyAuthenticator ? opts.publicKey : undefined
 
             if (fed) {
                 if (password || pub) throw NotSupported(supported)
@@ -47,6 +49,7 @@ export function createCredentialsContainer(options: CreateCredentialsContainerOp
             } else if (pub) {
                 if (fed || password) throw NotSupported(supported)
                 // use publicKeyAuthenticator
+                return publicKeyAuthenticator!.get(pub as PublicKeyCredentialRequestOptions, opts.signal)
             }
             throw NotSupported(supported)
         },
