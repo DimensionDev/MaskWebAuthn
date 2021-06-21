@@ -11,7 +11,6 @@ const backend = {
     output: {
         dir: './dist/',
         format: 'esm',
-
     },
     plugins: [sucrase({ transforms: ['typescript'] })],
 }
