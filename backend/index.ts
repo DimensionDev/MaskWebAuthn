@@ -13,7 +13,7 @@ export interface CreateAuthenticatorOptions {
     // sign count
     getSignCount(key: CryptoKey, rpID: string, credentialID: ArrayBuffer): Promise<number>
 
-    incrementSignCount(key: CryptoKey): Promise<void>
+    incrementSignCount(key: CryptoKey, rpID: string, credentialID: ArrayBuffer): Promise<void>
 
     hasCredential(rpID: string, credentialID: ArrayBuffer): Promise<boolean>
 
