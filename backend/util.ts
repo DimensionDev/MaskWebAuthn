@@ -37,7 +37,7 @@ export function isRegistrableDomain(hostSuffixString: string, originalHost: stri
     }
 }
 
-export const checkUserVerification = (userVerification: UserVerificationRequirement): boolean => {
+export function checkUserVerification(userVerification: UserVerificationRequirement): boolean {
     switch (userVerification) {
         case 'discouraged':
             return false
@@ -48,14 +48,15 @@ export const checkUserVerification = (userVerification: UserVerificationRequirem
     }
 }
 
-export const filterCredentials = (credentials: PublicKeyCredentialDescriptor[]): PublicKeyCredentialDescriptor[] =>
-    credentials.filter((credential) => {
+export function filterCredentials(credentials: PublicKeyCredentialDescriptor[]): PublicKeyCredentialDescriptor[] {
+    return credentials.filter((credential) => {
         if (credential.transports && Array.isArray(credential.transports) && credential.transports.length > 0) {
             return false
         } else {
             return credential.type === 'public-key'
         }
     })
+}
 
 export function serializeCollectedClientData(collectedClientData: CollectedClientData): string {
     let result = ''
@@ -71,7 +72,7 @@ export function serializeCollectedClientData(collectedClientData: CollectedClien
     result += ccdToString(collectedClientData.origin)
     result += ',"crossOrigin":'
     result += collectedClientData.crossOrigin ? 'true' : 'false'
-    // we dont handle the rest of the client data
+    // we don't handle the rest of the client data
     result += '}'
     return result
 }
@@ -83,7 +84,6 @@ export function ccdToString(obj: any) {
     let encoded = ''
     encoded += '"'
     const objString = `${obj}`
-    // warning: not support IE 11
     for (const char of objString) {
         // check whether char is UTF-16 text
         // if `char.length > 1`, then it is the UTF-16
@@ -126,7 +126,7 @@ export enum AuthDataFlag {
 }
 
 export type AuthData = {
-    rpIdHash: string // sha256 encrypted replying party id
+    rpIdHash: string // sha256 hashed replying party id
     flags: AuthDataFlag
     signCount: number
     attestedCredentialData: {

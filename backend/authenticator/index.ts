@@ -7,29 +7,28 @@ export enum PublicKeyAlgorithm {
     ES256 = -7,
 }
 
-export function getSignatureParams(alg: PublicKeyAlgorithm): EcdsaParams {
+function getSignatureParams(alg: PublicKeyAlgorithm): EcdsaParams {
     if (alg === PublicKeyAlgorithm.ES256) {
         return {
             name: 'ECDSA',
             hash: 'SHA-256',
         }
     } else {
-        throw new TypeError('')
+        throw new TypeError('Unsupported algorithm')
     }
 }
 
 const supportSet = new Set([PublicKeyAlgorithm.ES256])
 
 export async function generateCreationResponse(
-    // maskbook provided
+    // backend creator provided
     credentialId: ArrayBuffer,
     keys: CryptoKeyPair,
     signCount: number,
-    // user provided
+    // RP provided
     rpID: string,
     clientData: CollectedClientData,
     algs: number[],
-    // other options
     signal?: AbortSignal,
 ): Promise<PublicKeyCredential> {
     const { publicKey, privateKey } = keys
@@ -60,7 +59,7 @@ export async function generateCreationResponse(
     // start sign
     const signType = algs.find((alg) => supportSet.has(alg))
     if (!signType) {
-        throw new Error('Not Support Algorithm')
+        throw new Error('Unsupported algorithm')
     }
     const signParams = getSignatureParams(signType)
     const signTarget = concatenate(antData, clientDataJsonHash)

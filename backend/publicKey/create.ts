@@ -12,20 +12,16 @@ export async function create(
     options: PublicKeyCredentialCreationOptions,
     signal?: AbortSignal,
 ): Promise<PublicKeyCredential | null> {
-    // we dont trust these parameters from upstream
+    // we don't trust these parameters from upstream
     delete options.timeout
     delete options.rp.id
 
     const { rpID, ...normalizedOptions } = await createOptions.getNormalizedCreateOptions()
     if (!(await createOptions.hasCredential(rpID))) {
-        return new Promise((resolve, reject) => {
-            reject(new DOMException('NotSupportedError'))
-        })
+        throw new DOMException('NotSupportedError')
     }
     if (signal?.aborted) {
-        return new Promise((resolve, reject) => {
-            reject(new DOMException('AbortError'))
-        })
+        throw new DOMException('AbortError')
     }
     const timeout = normalizedOptions.timeout as number
     const abortController = new AbortController()
@@ -35,7 +31,7 @@ export async function create(
 
     const credTypesAndPubKeyAlgorithms = [] as { type: string; alg: number }[]
     // If this array contains multiple elements, they are sorted by descending order of preference.
-    //  We only support `ES256` algorithm
+    // We only support `ES256` algorithm
     if (Array.isArray(options.pubKeyCredParams) && options.pubKeyCredParams.length > 0) {
         for (const param of options.pubKeyCredParams) {
             if (param.type !== 'public-key') {
@@ -66,15 +62,8 @@ export async function create(
         throw new DOMException('AbortError')
     }
 
-    signal?.addEventListener('abort', function cleanup() {
-        signal?.removeEventListener('abort', cleanup)
-    })
-    expiredSignal.addEventListener('abort', function cleanup() {
-        expiredSignal.removeEventListener('abort', cleanup)
-    })
-
     if (expiredSignal.aborted) {
-        return Promise.resolve().then(() => null)
+        return null
     } else {
         const { excludeCredentials = [], authenticatorSelection = {} } = options
         const {
@@ -115,8 +104,7 @@ export async function create(
             // see https://developer.mozilla.org/en-US/docs/Web/API/PublicKeyCredentialCreationOptions/excludeCredentials
             //  this option used for the server to create new credentials for an existing user.
             if (Array.isArray(excludeCredentials) && excludeCredentials.length > 0) {
-                const excludeCredentialDescriptorList: PublicKeyCredentialDescriptor[] =
-                    filterCredentials(excludeCredentials)
+                const excludeCredentialDescriptorList = filterCredentials(excludeCredentials)
 
                 ;[keys, credentialID] = await createOptions.getKeyPairByKeyWrap(
                     rpID,
@@ -128,7 +116,7 @@ export async function create(
             }
             ;[keys, credentialID] = await createOptions.getResidentKeyPair(rpID)
             const signCount = await createOptions.getSignCount(keys.privateKey, rpID, credentialID)
-            return generateCreationResponse(
+            const response = await generateCreationResponse(
                 credentialID,
                 keys,
                 signCount,
@@ -136,13 +124,9 @@ export async function create(
                 collectedClientData,
                 credTypesAndPubKeyAlgorithms.map((alg) => alg.alg),
                 expiredSignal,
-            ).then((response) => {
-                // we not guarantee this promise will resolve
-                createOptions.incrementSignCount(keys!.privateKey, rpID, credentialID).catch(() => {
-                    /* ignore error */
-                })
-                return response
-            })
+            )
+            createOptions.incrementSignCount(keys.privateKey, rpID, credentialID).catch(console.error)
+            return response
         } else {
             // ignore 'platform'
             console.error("Not Support 'platform'")
