@@ -25,6 +25,7 @@
     "serve": "http-server -o -c-1"
   },
   "dependencies": {
+    "cbor-redux": "^0.3.1",
     "tslib": "^2.2.0"
   },
   "devDependencies": {

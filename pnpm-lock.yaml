@@ -2,6 +2,7 @@ lockfileVersion: 5.3
 
 specifiers:
   '@rollup/plugin-sucrase': ^3.1.0
+  cbor-redux: ^0.3.1
   eslint: ^7.29.0
   eslint-config-prettier: ^8.3.0
   eslint-plugin-prettier: ^3.4.0
@@ -15,6 +16,7 @@ specifiers:
   typescript: ^4.3.2
 
 dependencies:
+  cbor-redux: 0.3.1
   tslib: 2.2.0
 
 devDependencies:
@@ -968,6 +970,10 @@ packages:
   /caniuse-lite/1.0.30001231:
     resolution: {integrity: sha512-WAFFv31GgU4DiwNAy77qMo3nNyycEhH3ikcCVHvkQpPe/fO8Tb2aRYzss8kgyLQBm8mJ7OryW4X6Y4vsBCIqag==}
     dev: true
+
+  /cbor-redux/0.3.1:
+    resolution: {integrity: sha512-gUKg3J5Lewk7IkQurhrEVPQ3UvZp2e7knK/y7UAuf+RTu7zspOGvmv05ZbXlDkk0nW1EGLEJ2zy+JEksg6n7lQ==}
+    dev: false
 
   /chalk/2.4.2:
     resolution: {integrity: sha512-Mti+f9lpJNcwF4tWV8/OrTTtF1gZi+f8FqlyAdouralcFWFQWF2+NgCHShjkCb+IFBLq9buZwE1xckQU4peSuQ==}
