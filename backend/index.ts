@@ -11,7 +11,7 @@ export interface CreateAuthenticatorOptions {
     getNormalizedCreateOptions(): Promise<NormalizedCreateOptions>
 
     // sign count
-    getSignCount(key: CryptoKey): Promise<number>
+    getSignCount(key: CryptoKey, rpID: string, credentialID: ArrayBuffer): Promise<number>
 
     incrementSignCount(key: CryptoKey): Promise<void>
 
