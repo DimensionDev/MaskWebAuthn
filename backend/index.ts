@@ -16,7 +16,7 @@ export interface CreateAuthenticatorOptions {
 
     incrementSignCount(key: CryptoKey, rpID: string, credentialID?: ArrayBuffer | null): Promise<void>
 
-    hasCredential(rpID: string, credentialID?: ArrayBuffer | null): Promise<boolean>
+    hasCredential(rpID: string, credentialID: ArrayBuffer): Promise<boolean>
 
     // without username
     getResidentKeyPair(rpID: string): Promise<readonly [key: CryptoKeyPair, credentialID: ArrayBuffer]>

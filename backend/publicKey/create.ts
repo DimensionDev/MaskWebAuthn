@@ -17,12 +17,6 @@ export async function create(
     delete options.rp.id
 
     const { rpID, ...normalizedOptions } = await createOptions.getNormalizedCreateOptions()
-    if (!(await createOptions.hasCredential(rpID))) {
-        throw new DOMException('NotSupportedError')
-    }
-    if (signal?.aborted) {
-        throw new DOMException('AbortError')
-    }
     const timeout = normalizedOptions.timeout as number
     const abortController = new AbortController()
     const expiredSignal = abortController.signal
@@ -129,8 +123,7 @@ export async function create(
             return response
         } else {
             // ignore 'platform'
-            console.error("Not Support 'platform'")
-            return Promise.resolve().then(() => null)
+            throw new Error('Not Support')
         }
     }
 }
