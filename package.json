@@ -17,6 +17,7 @@
   "main": "index.js",
   "scripts": {
     "start": "run-p watch-tsc watch-rollup serve",
+    "test": "jest",
     "tsc": "tsc -b .",
     "watch-tsc": "tsc -b . -w",
     "rollup": "rollup -c",
@@ -29,16 +30,19 @@
     "tslib": "^2.2.0"
   },
   "devDependencies": {
+    "@peculiar/webcrypto": "^1.1.7",
     "@rollup/plugin-sucrase": "^3.1.0",
+    "@types/jest": "^26.0.23",
     "eslint": "^7.29.0",
     "eslint-config-prettier": "^8.3.0",
     "eslint-plugin-prettier": "^3.4.0",
     "eslint-plugin-unused-imports": "^1.0.0",
     "http-server": "^0.12.3",
-    "jest": "^27.0.3",
+    "jest": "^27.0.5",
     "npm-run-all": "^4.1.5",
     "prettier": "^2.3.1",
     "rollup": "^2.50.5",
+    "ts-jest": "^27.0.3",
     "typescript": "^4.3.2"
   }
 }
