@@ -84,7 +84,7 @@ export async function generateCreationResponse(
         } as AuthenticatorAttestationResponse,
         type: 'public-key',
         getClientExtensionResults(): AuthenticationExtensionsClientOutputs {
-            throw new Error('not supported')
+            return {}
         },
     }
 }
