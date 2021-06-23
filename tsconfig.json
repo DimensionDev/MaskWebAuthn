@@ -1,6 +1,7 @@
 {
     "references": [{ "path": "./backend" }, { "path": "./types" }, { "path": "./api" }, { "path": "./playground" }],
     "compilerOptions": {
+        "outDir": "out",
         // emit
         "target": "ES2019",
         "module": "ESNext",
@@ -11,7 +12,7 @@
         "useDefineForClassFields": true,
         "stripInternal": true,
         // type
-        "lib": ["DOM", "DOM.Iterable", "ES2019"],
+        "lib": ["DOM", "DOM.Iterable", "ES2019", "ESNext"],
         "skipLibCheck": true,
         // project reference
         "composite": true,
@@ -27,7 +28,7 @@
         "noImplicitReturns": true,
         "noImplicitThis": true,
         "importsNotUsedAsValues": "error",
-        "forceConsistentCasingInFileNames": true
-    },
-    "files": []
+        "forceConsistentCasingInFileNames": true,
+        "typeRoots": ["node_modules/@types"]
+    }
 }

@@ -1,3 +1,4 @@
+import { create } from './publicKey'
 import type { PublicKeyAuthenticatorProtocol } from '../types/interface'
 
 export interface NormalizedCreateOptions {
@@ -13,7 +14,7 @@ export interface CreateAuthenticatorOptions {
     // sign count
     getSignCount(key: CryptoKey, rpID: string, credentialID: ArrayBuffer): Promise<number>
 
-    incrementSignCount(key: CryptoKey, rpID: string, credentialID: ArrayBuffer): Promise<void>
+    incrementSignCount(key: CryptoKey, rpID: string, credentialID?: ArrayBuffer | null): Promise<void>
 
     hasCredential(rpID: string, credentialID: ArrayBuffer): Promise<boolean>
 
@@ -29,9 +30,7 @@ export interface CreateAuthenticatorOptions {
 
 export function createPublicKeyAuthenticator(opts: CreateAuthenticatorOptions): PublicKeyAuthenticatorProtocol {
     return {
-        create: function () {
-            throw new Error()
-        },
+        create: create.bind(undefined, opts),
         get: function () {
             throw new Error()
         },
