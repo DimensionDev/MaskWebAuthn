@@ -1,5 +1,5 @@
 import { Buffer } from 'buffer'
-import type { CollectedClientData } from '../dist/types/interface'
+import type { CollectedClientData } from '../types/interface'
 
 export function isRegistrableDomain(hostSuffixString: string, originalHost: string): boolean {
     // refs:
