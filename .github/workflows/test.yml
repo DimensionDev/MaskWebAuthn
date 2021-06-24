@@ -13,6 +13,6 @@ jobs:
       - uses: actions/cache@v2
         with:
           path: ~/.pnpm-store
-          key: ${{ runner.os }}-node-${{ hashFiles('**/pnpm-lock.yaml') }}
+          key: ${{ runner.os }}-node-${{ hashFiles('pnpm-lock.yaml') }}
       - run: npx pnpm install
       - run: npx pnpm run test
