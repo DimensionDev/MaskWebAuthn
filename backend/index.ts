@@ -1,4 +1,4 @@
-import { create } from './publicKey'
+import { create, get } from './publicKey'
 import type { PublicKeyAuthenticatorProtocol } from '../types/interface'
 
 export interface NormalizedCreateOptions {
@@ -31,8 +31,6 @@ export interface CreateAuthenticatorOptions {
 export function createPublicKeyAuthenticator(opts: CreateAuthenticatorOptions): PublicKeyAuthenticatorProtocol {
     return {
         create: create.bind(undefined, opts),
-        get: function () {
-            throw new Error()
-        },
+        get: get.bind(undefined, opts),
     }
 }
