@@ -1,7 +1,6 @@
-import rollup from 'rollup'
 import sucrase from '@rollup/plugin-sucrase'
+import { nodeResolve } from '@rollup/plugin-node-resolve'
 
-/** @type {rollup.RollupOptions} */
 const backend = {
     input: {
         backend: './backend/index.ts',
@@ -12,6 +11,9 @@ const backend = {
         dir: './dist/',
         format: 'esm',
     },
-    plugins: [sucrase({ transforms: ['typescript'] })],
+    plugins: [
+        sucrase({ transforms: ['typescript'] }),
+        nodeResolve(),
+    ],
 }
 export default backend
