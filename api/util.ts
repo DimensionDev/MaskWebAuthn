@@ -21,7 +21,7 @@ export async function verify(publicKey: CryptoKey, credential: PublicKeyCredenti
         const decodedAttestationObject = decode(attestationObject) as AttestationObject
         const {
             attStmt: { sig },
-            antData,
+            authData,
         } = decodedAttestationObject
         const clientDataJsonHash = await crypto.subtle.digest('SHA-256', clientDataJSON)
         return crypto.subtle.verify(
@@ -31,7 +31,7 @@ export async function verify(publicKey: CryptoKey, credential: PublicKeyCredenti
             },
             publicKey,
             sig,
-            concatenate(antData, clientDataJsonHash),
+            concatenate(authData, clientDataJsonHash),
         )
     }
     // fallback

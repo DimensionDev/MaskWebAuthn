@@ -19,5 +19,5 @@ export type AttestationObject = {
         alg: number
         sig: ArrayBuffer
     }
-    antData: ArrayBuffer
+    authData: ArrayBuffer
 }
