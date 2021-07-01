@@ -40,14 +40,14 @@ export async function generateCreationResponse(
     const rawPublicKey = await crypto.subtle.exportKey('raw', publicKey)
     const idBuffer = Buffer.from(rawPublicKey)
 
-    const antData = encodeAuthData({
-        rpIdHash: Buffer.from(await sha256(Buffer.from(rpID, 'utf-8'))).toString('utf-8'),
+    const authData = encodeAuthData({
+        rpIdHash: await sha256(Buffer.from(rpID, 'utf-8')),
         flags: 0,
         signCount,
         attestedCredentialData: {
             aaugid: '0', // we not support aaguid
             credentialId,
-            credentialPublicKey: await crypto.subtle.exportKey('raw', publicKey),
+            credentialPublicKey: await crypto.subtle.exportKey('jwk', publicKey),
         },
         extensions: undefined,
     })
@@ -62,18 +62,19 @@ export async function generateCreationResponse(
         throw new Error('Unsupported algorithm')
     }
     const signParams = getSignatureParams(signType)
-    const signTarget = concatenate(antData, clientDataJsonHash)
+    const signTarget = concatenate(authData, clientDataJsonHash)
     const signature = await crypto.subtle.sign(signParams, privateKey, signTarget)
     // end sign
 
-    const attestationObject = encode({
+    const obj = {
         fmt: 'packed',
         attStmt: {
             alg: signType,
             sig: signature,
         },
-        antData,
-    } as AttestationObject)
+        authData,
+    }
+    const attestationObject = encode<AttestationObject>(obj)
 
     return {
         id: idBuffer.toString('base64'),

@@ -1,5 +1,6 @@
 import { Buffer } from 'buffer'
 import type { CollectedClientData } from '../types/interface'
+import { encode } from 'cbor-redux'
 
 export function isRegistrableDomain(hostSuffixString: string, originalHost: string): boolean {
     // refs:
@@ -126,13 +127,13 @@ export enum AuthDataFlag {
 }
 
 export type AuthData = {
-    rpIdHash: string // sha256 hashed replying party id
+    rpIdHash: ArrayBuffer // sha256 hashed replying party id
     flags: AuthDataFlag
     signCount: number
     attestedCredentialData: {
         aaugid: string // is zero
         credentialId: ArrayBuffer
-        credentialPublicKey: ArrayBuffer
+        credentialPublicKey: JsonWebKey
     }
     extensions: unknown // not support yet
 }
@@ -152,25 +153,38 @@ export function concatenate(...arrays: ArrayBuffer[]): ArrayBuffer {
 
 export function encodeAuthData(authData: AuthData): ArrayBuffer {
     // set idHash, 32 byte
-    const idHashBuffer = Buffer.from(authData.rpIdHash)
+    if (authData.rpIdHash.byteLength !== 32) {
+        throw new TypeError('length of rpIdHash must be 32.')
+    }
     // set flags, 1 byte
     const flagsBuffer = new Uint8Array(1)
-    flagsBuffer.set([authData.flags], 0)
+    flagsBuffer.set([authData.flags | AuthDataFlag.AT], 0)
     // set signCount, 4 byte
     const signCountBuffer = new Uint32Array(1)
-    signCountBuffer.set([authData.signCount], 0)
+    let view = new DataView(signCountBuffer.buffer)
+    view.setUint32(0, authData.signCount, false)
     // set attestedCredentialData
     const { credentialId, credentialPublicKey } = authData.attestedCredentialData
     const aaguidBuffer = new Uint32Array(4).fill(0) // is zero
     const credentialIdLengthBuffer = new Uint16Array(1)
-    credentialIdLengthBuffer.set([credentialId.byteLength], 0)
+    view = new DataView(credentialIdLengthBuffer.buffer)
+    view.setUint16(0, credentialId.byteLength, false)
+    // todo: unfinished public key in cose type
+    //  https://datatracker.ietf.org/doc/html/rfc8152#section-7
+    const publicKeyBuffer = encode({
+        /* EC2 */ [1]: credentialPublicKey.kty, // string
+        /* alg */ [3]: -7, // string
+        /* crv */ [-1]: credentialPublicKey.crv, // string
+        /* x */ [-2]: Buffer.from(credentialPublicKey.x!).buffer, // buffer
+        /* y */ [-3]: Buffer.from(credentialPublicKey.y!).buffer, // buffer
+    })
     return concatenate(
-        idHashBuffer.buffer,
+        authData.rpIdHash,
         flagsBuffer.buffer,
         signCountBuffer.buffer,
         aaguidBuffer.buffer,
         credentialIdLengthBuffer.buffer,
         credentialId,
-        credentialPublicKey,
+        publicKeyBuffer,
     )
 }
