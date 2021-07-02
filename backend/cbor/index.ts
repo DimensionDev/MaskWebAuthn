@@ -141,6 +141,13 @@ export const MajorTypeMap = {
     [MajorType.ByteString]: ByteString,
 } as Record<MajorType, <T extends any = any>(value: T) => ArrayBuffer>
 
+export const SimpleTypeMap = {
+    [SimpleType.True]: (value: any) => typeof value === 'boolean',
+    [SimpleType.False]: (value: any) => typeof value === 'boolean',
+    [SimpleType.Undefined]: (value: any) => value === undefined,
+    [SimpleType.NULL]: (value: any) => value === null,
+} as Record<SimpleType, <T extends any = any>(value: any) => value is T>
+
 function parseType(types: Type[], value: any): ArrayBuffer {
     for (let type of types) {
         if (isMajorType(type)) {
@@ -167,29 +174,10 @@ function parseType(types: Type[], value: any): ArrayBuffer {
         }
     }
     function matchSimpleType(type: SimpleType, value: boolean | undefined | null): undefined | ArrayBuffer {
-        switch (type) {
-            case SimpleType.False:
-            case SimpleType.True: {
-                if (typeof value === 'boolean') {
-                    return Buffer.from([type])
-                } else {
-                    return
-                }
-            }
-            case SimpleType.NULL: {
-                if (value === null) {
-                    return Buffer.from([type])
-                } else {
-                    return
-                }
-            }
-            case SimpleType.Undefined: {
-                if (value === undefined) {
-                    return Buffer.from([type])
-                } else {
-                    return
-                }
-            }
+        if (SimpleTypeMap[type](value)) {
+            return Buffer.from([type])
+        } else {
+            return
         }
     }
 }
@@ -201,12 +189,15 @@ export function parseJsonWebKey(jwk: JsonWebKey): ArrayBuffer {
     result.push(Buffer.from([INF_MAP_START]))
     for (let key of Object.getOwnPropertyNames(jwk)) {
         const [label, types] = keyToCOSEKey(key)
-        result.push(Buffer.from(Number(label)))
-        result.push(Buffer.from(parseType(types, jwk[key])))
+        pushKeyValue(Buffer.from(Number(label)), Buffer.from(parseType(types, jwk[key])))
     }
 
     // todo: remove INF_MAP_START
     result.push(Buffer.from([BREAK]))
 
     return Buffer.concat(result)
+    function pushKeyValue(key: Buffer, value: Buffer) {
+        result.push(key)
+        result.push(value)
+    }
 }
