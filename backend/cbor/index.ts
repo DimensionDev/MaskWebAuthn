@@ -1,3 +1,5 @@
+import { Buffer } from 'buffer'
+
 const keyToCOSEKey = (key: keyof JsonWebKey): [label: number, allowedType: Type[]] => {
     switch (key) {
         case 'kty':
