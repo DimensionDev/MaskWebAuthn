@@ -44,3 +44,14 @@ export function parseAuthData(buffer: ArrayBuffer) {
         COSEPublicKey,
     }
 }
+
+export function hex2arrayBuffer(data: string): ArrayBuffer {
+    const length = data.length / 2
+    let ret = new Uint8Array(length)
+
+    for (let i = 0; i < length; i += 1) {
+        ret[i] = parseInt(data.substr(i * 2, 2), 16)
+    }
+
+    return ret.buffer
+}
