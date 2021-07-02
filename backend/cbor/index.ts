@@ -64,25 +64,25 @@ const withPosInt: WithTypeWrapper = (payload: number) => withType(MajorType.PosI
 const withUtf8: WithTypeWrapper = (payload: number) => withType(MajorType.UTF8String, payload)
 const withBStr: WithTypeWrapper = (payload) => withType(MajorType.ByteString, payload)
 
-export const toByteArray = (x: number): ArrayBuffer => {
-    const LogTable = [-1, 1, 2, 4, 4] as const
+export const toByteArray = (x: number, padding?: number): ArrayBuffer => {
+    const LogTable = [1, 1, 2, 4, 4] as const
     const array = [] as Uint8Array[]
     if (x > INT32_MAX) {
         // javascript cannot handle bit operators with number larger than int32
         const y = Math.floor(x / 2 ** 32) // handle the high level
         array.unshift(Buffer.from(toByteArray(y)))
         while (array.length < 4) {
-            array.unshift(new Uint8Array([0]))
+            array.unshift(Buffer.from([0]))
         }
-        return Buffer.concat([...array, Buffer.from([0xff, 0xff, 0xff, 0xff])])
+        return Buffer.concat([...array, Buffer.from(toByteArray(x & INT32_MAX, 4))])
     } else {
         while (x > 0) {
             const byte = x & 0xff /* INT8_MAX */
-            array.unshift(new Uint8Array([byte]))
+            array.unshift(Buffer.from([byte]))
             x >>>= 8
         }
-        while (array.length < LogTable[array.length]) {
-            array.unshift(new Uint8Array([0]))
+        while (array.length < (padding || LogTable[array.length])) {
+            array.unshift(Buffer.from([0]))
         }
     }
     return Buffer.concat(array)
