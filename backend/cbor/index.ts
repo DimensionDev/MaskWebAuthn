@@ -52,7 +52,7 @@ export enum SimpleType {
 
 export type Type = MajorType | SimpleType
 
-export const isMajorType = (v: Type): v is MajorType => v < 7
+export const isMajorType = (v: Type): v is MajorType => v >= 0 && v <= 7
 export const isSimpleType = (v: Type): v is SimpleType => v >= SimpleType.False && v <= SimpleType.Undefined
 
 type WithType = (type: MajorType, payload: number) => number
@@ -63,38 +63,6 @@ const withNegInt: WithTypeWrapper = (payload: number) => withType(MajorType.NegI
 const withPosInt: WithTypeWrapper = (payload: number) => withType(MajorType.PosInt, payload)
 const withUtf8: WithTypeWrapper = (payload: number) => withType(MajorType.UTF8String, payload)
 const withBStr: WithTypeWrapper = (payload) => withType(MajorType.ByteString, payload)
-
-export const toByteArray = (x: number, padding?: number): ArrayBuffer => {
-    const LogTable = [1, 1, 2, 4, 4] as const
-    const array = [] as Uint8Array[]
-    if (x > INT32_MAX) {
-        // javascript cannot handle bit operators with number larger than int32
-        const y = Math.floor(x / 2 ** 32) // handle the high level
-        array.unshift(Buffer.from(toByteArray(y)))
-        while (array.length < 4) {
-            array.unshift(Buffer.from([0]))
-        }
-        return Buffer.concat([...array, Buffer.from(toByteArray(x & INT32_MAX, 4))])
-    } else {
-        while (x > 0) {
-            const byte = x & 0xff /* INT8_MAX */
-            array.unshift(Buffer.from([byte]))
-            x >>>= 8
-        }
-        while (array.length < (padding || LogTable[array.length])) {
-            array.unshift(Buffer.from([0]))
-        }
-    }
-    return Buffer.concat(array)
-}
-
-export const Number = (number: number): ArrayBuffer => {
-    if (number >= 0 || number === -0) {
-        return parseNumber(number, withPosInt)
-    } else {
-        return parseNumber(-number - 1, withNegInt)
-    }
-}
 
 function parseNumber(number: number, withType: WithTypeWrapper): ArrayBuffer {
     let startBuffer: Buffer
@@ -114,6 +82,37 @@ function parseNumber(number: number, withType: WithTypeWrapper): ArrayBuffer {
         endBuffer = Buffer.from(toByteArray(number))
     }
     return Buffer.concat([startBuffer, endBuffer])
+    function toByteArray(x: number, padding?: number): ArrayBuffer {
+        const LogTable = [1, 1, 2, 4, 4] as const
+        const array = [] as Uint8Array[]
+        if (x > INT32_MAX) {
+            // javascript cannot handle bit operators with number larger than int32
+            const y = Math.floor(x / 2 ** 32) // handle the high level
+            array.unshift(Buffer.from(toByteArray(y)))
+            while (array.length < 4) {
+                array.unshift(Buffer.from([0]))
+            }
+            return Buffer.concat([...array, Buffer.from(toByteArray(x & INT32_MAX, 4))])
+        } else {
+            while (x > 0) {
+                const byte = x & 0xff /* INT8_MAX */
+                array.unshift(Buffer.from([byte]))
+                x >>>= 8
+            }
+            while (array.length < (padding || LogTable[array.length])) {
+                array.unshift(Buffer.from([0]))
+            }
+        }
+        return Buffer.concat(array)
+    }
+}
+
+export const Number = (number: number): ArrayBuffer => {
+    if (number >= 0 || number === -0) {
+        return parseNumber(number, withPosInt)
+    } else {
+        return parseNumber(-number - 1, withNegInt)
+    }
 }
 
 export const UTF8String = (string: string): ArrayBuffer => {
