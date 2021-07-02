@@ -85,7 +85,7 @@ function parseNumber(number: number, withType: WithTypeWrapper): ArrayBuffer {
     }
     return Buffer.concat([startBuffer, endBuffer])
     function toByteArray(x: number, padding?: number): ArrayBuffer {
-        const LogTable = [1, 1, 2, 4, 4] as const
+        const LogTable = [-1, 1, 2, 4, 4] as const
         const array = [] as Uint8Array[]
         if (x > INT32_MAX) {
             // javascript cannot handle bit operators with number larger than int32
