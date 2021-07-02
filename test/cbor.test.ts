@@ -1,4 +1,4 @@
-import { parseJsonWebKey, toByteArray, UTF8String } from '../backend/cbor'
+import { Number, parseJsonWebKey, UTF8String } from '../backend/cbor'
 
 test('parseJsonWebKey', () => {
     expect(parseJsonWebKey({})).toStrictEqual(Buffer.from([0xbf, 0xff]))
@@ -21,10 +21,14 @@ test('UTF8String', () => {
 })
 
 test('toByteArray', () => {
-    expect(toByteArray(0xff)).toStrictEqual(Buffer.from([0xff]))
-    expect(toByteArray(0x3f7f)).toStrictEqual(Buffer.from([0x3f, 0x7f]))
-    expect(toByteArray(0x3f7ffc)).toStrictEqual(Buffer.from([0x00, 0x3f, 0x7f, 0xfc]))
-    expect(toByteArray(2 ** 32 - 1)).toStrictEqual(Buffer.from([0xff, 0xff, 0xff, 0xff]))
-    expect(toByteArray(2 ** 32)).toStrictEqual(Buffer.from([0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00]))
-    expect(toByteArray(2 ** 32 + 1)).toStrictEqual(Buffer.from([0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01]))
+    expect(Number(0)).toStrictEqual(Buffer.from([0x00]))
+    expect(Number(1)).toStrictEqual(Buffer.from([0x01]))
+    expect(Number(10)).toStrictEqual(Buffer.from([0x0a]))
+    expect(Number(23)).toStrictEqual(Buffer.from([0x17]))
+    expect(Number(24)).toStrictEqual(Buffer.from([0x18, 0x18]))
+    expect(Number(25)).toStrictEqual(Buffer.from([0x18, 0x19]))
+    expect(Number(100)).toStrictEqual(Buffer.from([0x18, 0x64]))
+    expect(Number(1000)).toStrictEqual(Buffer.from([0x19, 0x03, 0xe8]))
+    expect(Number(1000000)).toStrictEqual(Buffer.from([0x1a, 0x00, 0x0f, 0x42, 0x40]))
+    expect(Number(1000000000000)).toStrictEqual(Buffer.from([0x1b, 0x00, 0x00, 0x00, 0xe8, 0xd4, 0xa5, 0x10, 0x00]))
 })

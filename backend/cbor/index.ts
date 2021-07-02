@@ -94,7 +94,10 @@ function parseNumber(number: number, withType: WithTypeWrapper): ArrayBuffer {
             while (array.length < 4) {
                 array.unshift(Buffer.from([0]))
             }
-            return Buffer.concat([...array, Buffer.from(toByteArray(x & INT32_MAX, 4))])
+            return Buffer.concat([
+                ...array,
+                Buffer.from(toByteArray((x & (2 ** 31 - 1)) + (x & (1 << 31) ? 2 ** 31 : 0), 4)),
+            ])
         } else {
             while (x > 0) {
                 const byte = x & 0xff /* INT8_MAX */
