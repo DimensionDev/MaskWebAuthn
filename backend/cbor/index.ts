@@ -142,8 +142,8 @@ export const MajorTypeMap = {
 } as Record<MajorType, <T extends any = any>(value: T) => ArrayBuffer>
 
 export const SimpleTypeMap = {
-    [SimpleType.True]: (value: any) => typeof value === 'boolean',
-    [SimpleType.False]: (value: any) => typeof value === 'boolean',
+    [SimpleType.True]: (value: any) => value === true,
+    [SimpleType.False]: (value: any) => value === false,
     [SimpleType.Undefined]: (value: any) => value === undefined,
     [SimpleType.NULL]: (value: any) => value === null,
 } as Record<SimpleType, <T extends any = any>(value: any) => value is T>
