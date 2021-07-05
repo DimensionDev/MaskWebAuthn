@@ -1,23 +1,8 @@
 import { Buffer } from 'buffer'
 
-const keyToCOSEKey = (key: keyof JsonWebKey): [label: number, allowedType: Type[]] => {
-    switch (key) {
-        case 'kty':
-            return [1, [MajorType.UTF8String, MajorType.PosInt, MajorType.NegInt]]
-        case 'alg':
-            return [3, [MajorType.ByteString]]
-        case 'key_ops':
-            return [4, [MajorType.UTF8String, MajorType.PosInt, MajorType.NegInt]]
-        case 'crv':
-            return [-1, [MajorType.UTF8String, MajorType.PosInt, MajorType.NegInt]]
-        case 'x':
-            return [-2, [MajorType.ByteString]]
-        case 'y':
-            return [-3, [MajorType.ByteString, SimpleType.True, SimpleType.False]]
-        case 'd':
-            return [-4, [MajorType.ByteString]]
-        default:
-            throw new TypeError()
+declare global {
+    interface ObjectConstructor {
+        getOwnPropertyNames<T extends any = any>(value: T): (keyof T)[]
     }
 }
 
@@ -52,19 +37,29 @@ export enum SimpleType {
     Undefined = 0xf7, //23
 }
 
+export enum LengthType {
+    UINT8 = 0x18,
+    UINT16 = 0x19,
+    UINT32 = 0x1a,
+    UINT64 = 0x1b,
+    INF = 0x1f,
+}
+
 export type Type = MajorType | SimpleType
 
 export const isMajorType = (v: Type): v is MajorType => v >= 0 && v <= 7
 export const isSimpleType = (v: Type): v is SimpleType => v >= SimpleType.False && v <= SimpleType.Undefined
 
 type WithType = (type: MajorType, payload: number) => number
-type WithTypeWrapper = (payload: number) => ReturnType<WithType>
+type WithTypeWrapper = (payload: number | LengthType) => ReturnType<WithType>
 
 const withType: WithType = (type: MajorType, payload: number): number => (type << 5) + payload
-const withNegInt: WithTypeWrapper = (payload: number) => withType(MajorType.NegInt, payload)
-const withPosInt: WithTypeWrapper = (payload: number) => withType(MajorType.PosInt, payload)
-const withUtf8: WithTypeWrapper = (payload: number) => withType(MajorType.UTF8String, payload)
+const withNegInt: WithTypeWrapper = (payload) => withType(MajorType.NegInt, payload)
+const withPosInt: WithTypeWrapper = (payload) => withType(MajorType.PosInt, payload)
+const withUtf8: WithTypeWrapper = (payload) => withType(MajorType.UTF8String, payload)
 const withBStr: WithTypeWrapper = (payload) => withType(MajorType.ByteString, payload)
+const withSet: WithTypeWrapper = (payload) => withType(MajorType.Array, payload)
+const withMap: WithTypeWrapper = (payload) => withType(MajorType.Map, payload)
 
 function parseNumber(number: number, withType: WithTypeWrapper): ArrayBuffer {
     let startBuffer: Buffer
@@ -112,7 +107,22 @@ function parseNumber(number: number, withType: WithTypeWrapper): ArrayBuffer {
     }
 }
 
-export const Number = (number: number): ArrayBuffer => {
+export type Hooks = {
+    // todo
+}
+
+export type EncodeOptions = {
+    lengthPrefer?: LengthType
+    hooks?: Hooks
+}
+
+export type Encoder = (data?: any, options?: EncodeOptions) => ArrayBuffer
+// Simple Value encode, no need options
+export const Undefined: Encoder = (): ArrayBuffer => Buffer.from([SimpleType.Undefined])
+export const Null: Encoder = (): ArrayBuffer => Buffer.from([SimpleType.NULL])
+export const Boolean: Encoder = (bool: boolean): ArrayBuffer => Buffer.from([bool ? SimpleType.True : SimpleType.False])
+// Major Type encode
+export const Number: Encoder = (number: number, options?: EncodeOptions): ArrayBuffer => {
     if (number >= 0 || number === -0) {
         return parseNumber(number, withPosInt)
     } else {
@@ -120,88 +130,115 @@ export const Number = (number: number): ArrayBuffer => {
     }
 }
 
-export const UTF8String = (string: string): ArrayBuffer => {
+export const UTF8String: Encoder = (string: string, options = {}): ArrayBuffer => {
     const stringBuffer = Buffer.from(string, 'utf-8')
     const startBuffer = Buffer.from(parseNumber(stringBuffer.byteLength, withUtf8))
     return Buffer.concat([startBuffer, stringBuffer])
 }
 
-export const ByteString = (string: string): ArrayBuffer => {
+export const ByteString: Encoder = (string: string, options = {}): ArrayBuffer => {
     const stringBuffer = Buffer.from(string, 'hex')
     const startBuffer = Buffer.from(parseNumber(stringBuffer.byteLength, withBStr))
     return Buffer.concat([startBuffer, stringBuffer])
 }
 
-declare global {
-    interface ObjectConstructor {
-        getOwnPropertyNames<T extends any = any>(value: T): (keyof T)[]
+export const ObjectLike: Encoder = (object: object, options = {}): ArrayBuffer => {
+    if (Array.isArray(object)) {
+        return handleArray(object.entries())
+    } else if (object instanceof Map) {
+        return handleObjectLike(object.entries())
+    } else if (object instanceof Set) {
+        return handleArray(object.entries())
+    } else {
+        return handleObjectLike(Object.entries(object)[Symbol.iterator]())
+    } // end
+    function handleArray(iter: IterableIterator<[value: unknown, value: unknown]>): ArrayBuffer {
+        let length = 0
+        const followingBuffers: Buffer[] = []
+        for (const [value] of iter) {
+            length++
+            followingBuffers.push(Buffer.from(encode(value)))
+        }
+        const startBuffer = Buffer.from(parseNumber(length, withSet))
+        return Buffer.concat([startBuffer, ...followingBuffers])
+    }
+    function handleObjectLike(iter: IterableIterator<[key: unknown, value: unknown]>): ArrayBuffer {
+        let length = 0
+        const followingBuffers: Buffer[] = []
+        for (const [key, value] of iter) {
+            length++
+            followingBuffers.push(Buffer.from(encode(key)))
+            followingBuffers.push(Buffer.from(encode(value)))
+        }
+        const startBuffer = Buffer.from(parseNumber(length, withMap))
+        return Buffer.concat([startBuffer, ...followingBuffers])
     }
 }
 
-export const MajorTypeMap = {
-    [MajorType.PosInt]: Number,
-    [MajorType.NegInt]: Number,
-    [MajorType.UTF8String]: UTF8String,
-    [MajorType.ByteString]: ByteString,
-} as Record<MajorType, <T extends any = any>(value: T) => ArrayBuffer>
-
-export const SimpleTypeMap = {
-    [SimpleType.True]: (value: any) => value === true,
-    [SimpleType.False]: (value: any) => value === false,
-    [SimpleType.Undefined]: (value: any) => value === undefined,
-    [SimpleType.NULL]: (value: any) => value === null,
-} as Record<SimpleType, <T extends any = any>(value: any) => value is T>
-
-function parseType(types: Type[], value: any): ArrayBuffer {
-    for (let type of types) {
-        if (isMajorType(type)) {
-            const parsed = matchMajorType(type, value)
-            if (parsed != null) {
-                return parsed
-            }
-        } else if (isSimpleType(type)) {
-            const parsed = matchSimpleType(type, value)
-            if (parsed != null) {
-                return parsed
-            }
+export function encode<T extends any = any>(data: T, options: EncodeOptions = {}): ArrayBuffer {
+    if (data == null) {
+        if (data === undefined) {
+            return Undefined()
         } else {
-            throw new TypeError('unreachable')
+            return Null()
         }
-    }
-    throw new TypeError('incorrect type')
-    function matchMajorType(type: MajorType, value: any): undefined | ArrayBuffer {
-        const callee = MajorTypeMap[type]
-        if (callee) {
-            return callee(value)
-        } else {
-            return undefined
-        }
-    }
-    function matchSimpleType(type: SimpleType, value: boolean | undefined | null): undefined | ArrayBuffer {
-        if (SimpleTypeMap[type](value)) {
-            return Buffer.from([type])
-        } else {
-            return
+    } else {
+        switch (typeof data) {
+            case 'number': {
+                return Number(data as number, options)
+            }
+            case 'boolean': {
+                return Boolean(data as boolean, options)
+            }
+            case 'object': {
+                return ObjectLike(data as object, options)
+            }
+            case 'string': {
+                return UTF8String(data as string, options)
+            }
+            case 'function':
+            case 'bigint':
+            case 'symbol': {
+                throw new TypeError('not support')
+            }
+            default:
+                throw new Error('unreachable')
         }
     }
 }
 
 // todo: refactor to parseObject
 export function parseJsonWebKey(jwk: JsonWebKey): ArrayBuffer {
-    const result: Buffer[] = []
-    // todo: remove INF_MAP_START
-    result.push(Buffer.from([INF_MAP_START]))
+    const array = [] as Buffer[]
+    let length = 0
     for (let key of Object.getOwnPropertyNames(jwk)) {
         const [label, types] = keyToCOSEKey(key)
-        pushKeyValue(Buffer.from(Number(label)), Buffer.from(parseType(types, jwk[key])))
+        array.push(Buffer.from(encode(label)))
+        array.push(Buffer.from(encode(jwk[key])))
+        length++
     }
+    // add length
+    array.unshift(Buffer.from(parseNumber(length, withMap)))
+    return Buffer.concat(array)
 
-    // todo: remove INF_MAP_START
-    result.push(Buffer.from([BREAK]))
-
-    return Buffer.concat(result)
-    function pushKeyValue(key: Buffer, value: Buffer) {
-        result.push(key)
-        result.push(value)
+    function keyToCOSEKey(key: keyof JsonWebKey): [label: number, allowedType: Type[]] {
+        switch (key) {
+            case 'kty':
+                return [1, [MajorType.UTF8String, MajorType.PosInt, MajorType.NegInt]]
+            case 'alg':
+                return [3, [MajorType.ByteString]]
+            case 'key_ops':
+                return [4, [MajorType.UTF8String, MajorType.PosInt, MajorType.NegInt]]
+            case 'crv':
+                return [-1, [MajorType.UTF8String, MajorType.PosInt, MajorType.NegInt]]
+            case 'x':
+                return [-2, [MajorType.ByteString]]
+            case 'y':
+                return [-3, [MajorType.ByteString, SimpleType.True, SimpleType.False]]
+            case 'd':
+                return [-4, [MajorType.ByteString]]
+            default:
+                throw new TypeError()
+        }
     }
 }
