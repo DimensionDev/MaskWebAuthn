@@ -1,10 +1,14 @@
 import { encode, Number, parseJsonWebKey, UTF8String } from '../backend/cbor'
+import { decode } from 'cbor-redux'
 
-const validCborPublicKey = Buffer.from([
+const validCborPublicKey = new Uint8Array([
     -91, 1, 2, 3, 38, 32, 1, 33, 88, 32, -13, 21, 122, -20, 72, -61, 72, 112, 94, -105, -105, 29, -8, -87, 13, 85, 82,
     31, -63, -104, 111, -52, -18, 42, 82, -7, -68, -11, 4, -12, 7, -49, 34, 88, 32, 45, -107, 76, 61, -28, 37, -64, 30,
     -20, -99, -82, 108, -76, 35, 35, -62, 126, -77, -16, -116, -128, 91, -44, 27, -20, 65, 1, 12, -79, 52, 109, -88,
 ])
+
+// valid key example from chrome
+const key = decode(validCborPublicKey.buffer)
 
 test('parseJsonWebKey', () => {
     expect(parseJsonWebKey({})).toStrictEqual(Buffer.from([0xa0]))
