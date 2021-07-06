@@ -28,7 +28,7 @@ test('generate response', async () => {
     const { clientDataJSON, attestationObject } = response.response as AuthenticatorAttestationResponse
     const dataJson = JSON.parse(Buffer.from(clientDataJSON).toString())
     expect(typeof dataJson).toBe('object')
-    expect(Buffer.from(dataJson.challenge.data as ArrayBuffer).every((v) => v === 3)).toBe(true)
+    expect(Buffer.from(dataJson.challenge, 'base64').every((v) => v === 3)).toBe(true)
     const attestation = decode(attestationObject)
     expect(attestation.fmt).toBe('packed')
     expect(attestation.attStmt.alg).toBe(PublicKeyAlgorithm.ES256)
