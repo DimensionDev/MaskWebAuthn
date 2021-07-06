@@ -64,11 +64,8 @@ export function serializeCollectedClientData(collectedClientData: CollectedClien
     result += '{'
     result += '"type":'
     result += ccdToString(collectedClientData.type)
-    result += ',"challenge":{'
-    result += '"type":"Buffer",'
-    result += '"data":['
-    result += ccdToString(collectedClientData.challenge).slice(1, -1)
-    result += ']}'
+    result += ',"challenge":'
+    result += ccdToString(collectedClientData.challenge)
     result += ',"origin":'
     result += ccdToString(collectedClientData.origin)
     result += ',"crossOrigin":'
@@ -151,6 +148,23 @@ export function concatenate(...arrays: ArrayBuffer[]): ArrayBuffer {
     return buffer.buffer
 }
 
+export function jwkToCOSEKey(jwk: JsonWebKey): ArrayBuffer {
+    // todo: currently we only support ecdh p-256 algorithm
+    const array: Buffer[] = []
+    array.push(Buffer.from([0xa5])) // size 5 of map
+    array.push(Buffer.from([0x01])) // key: kty
+    array.push(Buffer.from([0x02])) // value: EC
+    array.push(Buffer.from([0x20])) // key: crv
+    array.push(Buffer.from([0x01])) // value: P-256
+    array.push(Buffer.from([0x03])) // key: alg
+    array.push(Buffer.from([0x26])) // value: -7
+    array.push(Buffer.from(encode(-2))) // key: x
+    array.push(Buffer.from(encode(jwk.x)))
+    array.push(Buffer.from(encode(-3))) // key: y
+    array.push(Buffer.from(encode(jwk.y)))
+    return Buffer.concat(array)
+}
+
 export function encodeAuthData(authData: AuthData): ArrayBuffer {
     // set idHash, 32 byte
     if (authData.rpIdHash.byteLength !== 32) {
@@ -158,7 +172,7 @@ export function encodeAuthData(authData: AuthData): ArrayBuffer {
     }
     // set flags, 1 byte
     const flagsBuffer = new Uint8Array(1)
-    flagsBuffer.set([authData.flags | AuthDataFlag.AT], 0)
+    flagsBuffer.set([authData.flags | AuthDataFlag.AT | AuthDataFlag.UV], 0)
     // set signCount, 4 byte
     const signCountBuffer = new Uint32Array(1)
     let view = new DataView(signCountBuffer.buffer)
@@ -169,15 +183,7 @@ export function encodeAuthData(authData: AuthData): ArrayBuffer {
     const credentialIdLengthBuffer = new Uint16Array(1)
     view = new DataView(credentialIdLengthBuffer.buffer)
     view.setUint16(0, credentialId.byteLength, false)
-    // todo: unfinished public key in cose type
-    //  https://datatracker.ietf.org/doc/html/rfc8152#section-7
-    const publicKeyBuffer = encode({
-        /* EC2 */ [1]: credentialPublicKey.kty, // string
-        /* alg */ [3]: -7, // string
-        /* crv */ [-1]: credentialPublicKey.crv, // string
-        /* x */ [-2]: Buffer.from(credentialPublicKey.x!).buffer, // buffer
-        /* y */ [-3]: Buffer.from(credentialPublicKey.y!).buffer, // buffer
-    })
+    const publicKeyBuffer = jwkToCOSEKey(credentialPublicKey)
     return concatenate(
         authData.rpIdHash,
         flagsBuffer.buffer,

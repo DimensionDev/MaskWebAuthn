@@ -7,7 +7,7 @@ export interface _PasswordAuthenticatorProtocol {}
 
 export type CollectedClientData = {
     type: 'webauthn.create' | 'webauthn.get'
-    challenge: BufferSource
+    challenge: string
     origin: string
     crossOrigin: boolean
     tokenBinding: unknown

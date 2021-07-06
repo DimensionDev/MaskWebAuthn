@@ -1,6 +1,7 @@
 /* eslint-env jest */
 import { generateCreationResponse, PublicKeyAlgorithm } from '../backend/authenticator'
 import { Buffer } from 'buffer'
+import { Fido2Lib, AttestationResult } from 'fido2-lib'
 import { decode } from 'cbor-redux'
 import { verify } from '../api/util'
 
@@ -17,7 +18,7 @@ test('generate response', async () => {
         rpID,
         {
             type: 'webauthn.create',
-            challenge,
+            challenge: Buffer.from(challenge).toString('base64'),
             origin: rpID,
             crossOrigin: false,
             tokenBinding: undefined,

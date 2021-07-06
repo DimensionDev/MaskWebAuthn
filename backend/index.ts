@@ -4,7 +4,7 @@ import type { PublicKeyAuthenticatorProtocol } from '../types/interface'
 export interface NormalizedCreateOptions {
     timeout: number
     rpID: string
-    challenge: BufferSource
+    challenge: ArrayBuffer
     crossOrigin: boolean
 }
 

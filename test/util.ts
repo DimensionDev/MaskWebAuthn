@@ -1,3 +1,5 @@
+import { Buffer } from 'buffer'
+
 export function parseAuthData(buffer: ArrayBuffer) {
     const textDecoder = new TextDecoder()
     const rpIdHash = buffer.slice(0, 32)
@@ -43,4 +45,17 @@ export function parseAuthData(buffer: ArrayBuffer) {
         credID,
         COSEPublicKey,
     }
+}
+
+export async function cryptoKeyToPem(key: CryptoKey) {
+    const type = key.type.toUpperCase()
+    let out = ''
+    let str = Buffer.from(await crypto.subtle.exportKey('spki', key)).toString('base64')
+    out += `-----BEGIN ${type} KEY-----\n`
+    while (str.length > 0) {
+        out += str.substring(0, 64) + '\n'
+        str = str.substring(64)
+    }
+    out += `-----END ${type} KEY-----`
+    return out
 }
