@@ -4,6 +4,7 @@ specifiers:
   '@peculiar/webcrypto': ^1.1.7
   '@rollup/plugin-sucrase': ^3.1.0
   '@types/jest': ^26.0.23
+  cbor: ^7.0.5
   cbor-redux: ^0.3.1
   eslint: ^7.29.0
   eslint-config-prettier: ^8.3.0
@@ -26,6 +27,7 @@ devDependencies:
   '@peculiar/webcrypto': 1.1.7
   '@rollup/plugin-sucrase': 3.1.0_rollup@2.50.5
   '@types/jest': 26.0.23
+  cbor: 7.0.5
   eslint: 7.29.0
   eslint-config-prettier: 8.3.0_eslint@7.29.0
   eslint-plugin-prettier: 3.4.0_de2986b0c29d2faa795004f5443c76d1
@@ -397,6 +399,11 @@ packages:
 
   /@bcoe/v8-coverage/0.2.3:
     resolution: {integrity: sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==}
+    dev: true
+
+  /@cto.af/textdecoder/0.0.0:
+    resolution: {integrity: sha512-sJpx3F5xcVV/9jNYJQtvimo4Vfld/nD3ph+ZWtQzZ03Zo8rJC7QKQTRcIGS13Rcz80DwFNthCWMrd58vpY4ZAQ==}
+    engines: {node: '>=4.9.1'}
     dev: true
 
   /@eslint/eslintrc/0.4.2:
@@ -1092,6 +1099,20 @@ packages:
   /cbor-redux/0.3.1:
     resolution: {integrity: sha512-gUKg3J5Lewk7IkQurhrEVPQ3UvZp2e7knK/y7UAuf+RTu7zspOGvmv05ZbXlDkk0nW1EGLEJ2zy+JEksg6n7lQ==}
     dev: false
+
+  /cbor/7.0.5:
+    resolution: {integrity: sha512-0aaAPgW92lLmypb9iCd22k7tSD1FbF6dps8VQzmIBKY6ych2gO09b2vo/SbaLTmezJuB8Kh88Rvpl/Uq52mNZg==}
+    engines: {node: '>=10.18.0'}
+    requiresBuild: true
+    peerDependencies:
+      bignumber.js: ^9.0.1
+    peerDependenciesMeta:
+      bignumber.js:
+        optional: true
+    dependencies:
+      '@cto.af/textdecoder': 0.0.0
+      nofilter: 2.0.3
+    dev: true
 
   /chalk/2.4.2:
     resolution: {integrity: sha512-Mti+f9lpJNcwF4tWV8/OrTTtF1gZi+f8FqlyAdouralcFWFQWF2+NgCHShjkCb+IFBLq9buZwE1xckQU4peSuQ==}
@@ -2837,6 +2858,13 @@ packages:
 
   /node-releases/1.1.73:
     resolution: {integrity: sha512-uW7fodD6pyW2FZNZnp/Z3hvWKeEW1Y8R1+1CnErE8cXFXzl5blBOoVB41CvMer6P6Q0S5FXDwcHgFd1Wj0U9zg==}
+    dev: true
+
+  /nofilter/2.0.3:
+    resolution: {integrity: sha512-FbuXC+lK+GU2+63D1kC1ETiZo+Z7SIi7B+mxKTCH1byrh6WFvfBCN/wpherFz0a0bjGd7EKTst/cz0yLeNngug==}
+    engines: {node: '>=10.18'}
+    dependencies:
+      '@cto.af/textdecoder': 0.0.0
     dev: true
 
   /normalize-package-data/2.5.0:
