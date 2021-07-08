@@ -45,12 +45,11 @@ export async function create(
 
     const collectedClientData: CollectedClientData = {
         type: 'webauthn.create',
-        challenge: options.challenge,
+        challenge: Buffer.from(normalizedOptions.challenge).toString('base64'),
         origin: rpID,
         crossOrigin: normalizedOptions.crossOrigin,
         tokenBinding: undefined,
     }
-    // const collectedClientDataHash: string = await sha256(serializeCollectedClientData(collectedClientData))
 
     if (signal?.aborted) {
         throw new DOMException('AbortError')

@@ -24,13 +24,12 @@ export async function get(
 
     const collectedClientData: CollectedClientData = {
         type: 'webauthn.get',
-        challenge: normalizedOptions.challenge,
+        challenge: Buffer.from(normalizedOptions.challenge).toString('base64'),
         origin: normalizedOptions.rpID,
         crossOrigin: normalizedOptions.crossOrigin,
         tokenBinding: null,
     }
     const { userVerification, allowCredentials } = options
-    // const collectedClientDataHash: string = await sha256(serializeCollectedClientData(collectedClientData))
 
     const needUserVerification = checkUserVerification(userVerification || 'preferred')
     if (!needUserVerification) {
