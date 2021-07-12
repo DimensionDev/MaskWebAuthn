@@ -1,4 +1,3 @@
-import { Buffer } from 'buffer'
 import type { CollectedClientData } from '../types/interface'
 import { encode } from 'cbor-redux'
 
@@ -135,14 +134,42 @@ export type AuthData = {
     extensions: unknown // not support yet
 }
 
-export function concatenate(...arrays: ArrayBuffer[]): ArrayBuffer {
-    const buffersLengths = arrays.map(function (b) {
-        return b.byteLength
-    })
+export function stringToArrayBuffer(string: string, encoding: 'utf-8' | 'hex' = 'utf-8'): ArrayBuffer {
+    if (encoding === 'utf-8') {
+        const ret = new Uint8Array(string.length)
+        for (let i = 0; i < string.length; i++) {
+            ret[i] = string.charCodeAt(i)
+        }
+        return ret.buffer
+    } else if (encoding === 'hex') {
+        let length: number
+        if (string.charAt(1) === 'x') {
+            length = string.length - 2
+        } else {
+            length = string.length
+        }
+        const ret = new Uint8Array(length / 2)
+        for (let i = 0; i < length / 2; i++) {
+            const value = +string[i * 2] * 16 + +string[i * 2 + 1]
+            ret.set([value], i * 2)
+        }
+        return ret
+    } else {
+        throw new Error('UNREACHABLE')
+    }
+}
+
+export function concatenate(...arrays: (ArrayBuffer | Uint8Array)[]): ArrayBuffer {
+    const buffersLengths = arrays.map((array) => array.byteLength)
     const totalLength = buffersLengths.reduce((p, c) => p + c, 0)
-    const buffer = Buffer.alloc(totalLength)
+    const buffer = new Uint8Array(totalLength)
     buffersLengths.reduce(function (p, c, i) {
-        buffer.set(Buffer.from(arrays[i]), p)
+        const v = arrays[i]
+        if (v instanceof ArrayBuffer) {
+            buffer.set(new Uint8Array(v), p)
+        } else {
+            buffer.set(new Uint8Array(v.buffer), p)
+        }
         return p + c
     }, 0)
     return buffer.buffer
@@ -150,19 +177,19 @@ export function concatenate(...arrays: ArrayBuffer[]): ArrayBuffer {
 
 export function jwkToCOSEKey(jwk: JsonWebKey): ArrayBuffer {
     // todo: currently we only support ecdh p-256 algorithm
-    const array: Buffer[] = []
-    array.push(Buffer.from([0xa5])) // size 5 of map
-    array.push(Buffer.from([0x01])) // key: kty
-    array.push(Buffer.from([0x02])) // value: EC
-    array.push(Buffer.from([0x20])) // key: crv
-    array.push(Buffer.from([0x01])) // value: P-256
-    array.push(Buffer.from([0x03])) // key: alg
-    array.push(Buffer.from([0x26])) // value: -7
-    array.push(Buffer.from(encode(-2))) // key: x
-    array.push(Buffer.from(encode(jwk.x)))
-    array.push(Buffer.from(encode(-3))) // key: y
-    array.push(Buffer.from(encode(jwk.y)))
-    return Buffer.concat(array)
+    const array: Uint8Array[] = []
+    array.push(new Uint8Array([0xa5])) // size 5 of map
+    array.push(new Uint8Array([0x01])) // key: kty
+    array.push(new Uint8Array([0x02])) // value: EC
+    array.push(new Uint8Array([0x20])) // key: crv
+    array.push(new Uint8Array([0x01])) // value: P-256
+    array.push(new Uint8Array([0x03])) // key: alg
+    array.push(new Uint8Array([0x26])) // value: -7
+    array.push(new Uint8Array(encode(-2))) // key: x
+    array.push(new Uint8Array(encode(jwk.x)))
+    array.push(new Uint8Array(encode(-3))) // key: y
+    array.push(new Uint8Array(encode(jwk.y)))
+    return concatenate(...array)
 }
 
 export function encodeAuthData(authData: AuthData): ArrayBuffer {

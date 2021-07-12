@@ -1,15 +1,17 @@
 import { decode } from 'cbor-redux'
 import type { AttestationObject } from '../types/interface'
-import { Buffer } from 'buffer'
 
-export function concatenate(...arrays: ArrayBuffer[]): ArrayBuffer {
-    const buffersLengths = arrays.map(function (b) {
-        return b.byteLength
-    })
+export function concatenate(...arrays: (ArrayBuffer | Uint8Array)[]): ArrayBuffer {
+    const buffersLengths = arrays.map((array) => array.byteLength)
     const totalLength = buffersLengths.reduce((p, c) => p + c, 0)
-    const buffer = Buffer.alloc(totalLength)
+    const buffer = new Uint8Array(totalLength)
     buffersLengths.reduce(function (p, c, i) {
-        buffer.set(Buffer.from(arrays[i]), p)
+        const v = arrays[i]
+        if (v instanceof ArrayBuffer) {
+            buffer.set(new Uint8Array(v), p)
+        } else {
+            buffer.set(v, p)
+        }
         return p + c
     }, 0)
     return buffer.buffer

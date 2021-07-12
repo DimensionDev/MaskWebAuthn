@@ -39,7 +39,7 @@ test('buffer contact check', () => {
     a.set([0xf7, 0x7e, 0x7e, 0x7f], 0)
     b.set([0x3ff77ff3], 0)
     c.set([0x3ff3, 0x1122], 0)
-    const res = concatenate(a.buffer, b.buffer, c.buffer)
+    const res = concatenate(a, b, c)
     expect(res.byteLength).toBe(12)
     const dataView = new DataView(res)
     expect(dataView.getUint8(0)).toBe(0xf7)
