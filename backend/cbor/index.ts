@@ -1,4 +1,4 @@
-import { Buffer } from 'buffer'
+import { concatenate, stringToArrayBuffer } from '../util'
 
 declare global {
     interface ObjectConstructor {
@@ -62,48 +62,45 @@ const withSet: WithTypeWrapper = (payload) => withType(MajorType.Array, payload)
 const withMap: WithTypeWrapper = (payload) => withType(MajorType.Map, payload)
 
 function parseNumber(number: number, withType: WithTypeWrapper): ArrayBuffer {
-    let startBuffer: Buffer
-    let endBuffer = Buffer.alloc(0)
+    let startBuffer: Uint8Array
+    let endBuffer = new Uint8Array(0)
     if (number < 0x18) {
-        startBuffer = Buffer.from([withType(number)])
+        startBuffer = new Uint8Array([withType(number)])
     } else {
         if (number <= INT8_MAX) {
-            startBuffer = Buffer.from([withType(0x18)])
+            startBuffer = new Uint8Array([withType(0x18)])
         } else if (number <= INT16_MAX) {
-            startBuffer = Buffer.from([withType(0x19)])
+            startBuffer = new Uint8Array([withType(0x19)])
         } else if (number <= INT32_MAX) {
-            startBuffer = Buffer.from([withType(0x1a)])
+            startBuffer = new Uint8Array([withType(0x1a)])
         } else {
-            startBuffer = Buffer.from([withType(0x1b)])
+            startBuffer = new Uint8Array([withType(0x1b)])
         }
-        endBuffer = Buffer.from(toByteArray(number))
+        endBuffer = new Uint8Array(toByteArray(number))
     }
-    return Buffer.concat([startBuffer, endBuffer])
+    return concatenate(startBuffer, endBuffer)
     function toByteArray(x: number, padding?: number): ArrayBuffer {
         const LogTable = [-1, 1, 2, 4, 4] as const
         const array = [] as Uint8Array[]
         if (x > INT32_MAX) {
             // javascript cannot handle bit operators with number larger than int32
             const y = Math.floor(x / 2 ** 32) // handle the high level
-            array.unshift(Buffer.from(toByteArray(y)))
+            array.unshift(new Uint8Array(toByteArray(y)))
             while (array.length < 4) {
-                array.unshift(Buffer.from([0]))
+                array.unshift(new Uint8Array([0]))
             }
-            return Buffer.concat([
-                ...array,
-                Buffer.from(toByteArray((x & (2 ** 31 - 1)) + (x & (1 << 31) ? 2 ** 31 : 0), 4)),
-            ])
+            return concatenate(...array, toByteArray((x & (2 ** 31 - 1)) + (x & (1 << 31) ? 2 ** 31 : 0), 4))
         } else {
             while (x > 0) {
                 const byte = x & 0xff /* INT8_MAX */
-                array.unshift(Buffer.from([byte]))
+                array.unshift(new Uint8Array([byte]))
                 x >>>= 8
             }
             while (array.length < (padding || LogTable[array.length])) {
-                array.unshift(Buffer.from([0]))
+                array.unshift(new Uint8Array([0]))
             }
         }
-        return Buffer.concat(array)
+        return concatenate(...array)
     }
 }
 
@@ -118,9 +115,10 @@ export type EncodeOptions = {
 
 export type Encoder = (data?: any, options?: EncodeOptions) => ArrayBuffer
 // Simple Value encode, no need options
-export const Undefined: Encoder = (): ArrayBuffer => Buffer.from([SimpleType.Undefined])
-export const Null: Encoder = (): ArrayBuffer => Buffer.from([SimpleType.NULL])
-export const Boolean: Encoder = (bool: boolean): ArrayBuffer => Buffer.from([bool ? SimpleType.True : SimpleType.False])
+export const Undefined: Encoder = (): ArrayBuffer => new Uint8Array([SimpleType.Undefined])
+export const Null: Encoder = (): ArrayBuffer => new Uint8Array([SimpleType.NULL])
+export const Boolean: Encoder = (bool: boolean): ArrayBuffer =>
+    new Uint8Array([bool ? SimpleType.True : SimpleType.False])
 // Major Type encode
 export const Number: Encoder = (number: number, options?: EncodeOptions): ArrayBuffer => {
     if (number >= 0 || number === -0) {
@@ -131,15 +129,15 @@ export const Number: Encoder = (number: number, options?: EncodeOptions): ArrayB
 }
 
 export const UTF8String: Encoder = (string: string, options = {}): ArrayBuffer => {
-    const stringBuffer = Buffer.from(string, 'utf-8')
-    const startBuffer = Buffer.from(parseNumber(stringBuffer.byteLength, withUtf8))
-    return Buffer.concat([startBuffer, stringBuffer])
+    const stringBuffer = stringToArrayBuffer(string, 'utf-8')
+    const startBuffer = new Uint8Array(parseNumber(stringBuffer.byteLength, withUtf8))
+    return concatenate(startBuffer, stringBuffer)
 }
 
 export const ByteString: Encoder = (string: string, options = {}): ArrayBuffer => {
-    const stringBuffer = Buffer.from(string, 'hex')
-    const startBuffer = Buffer.from(parseNumber(stringBuffer.byteLength, withBStr))
-    return Buffer.concat([startBuffer, stringBuffer])
+    const stringBuffer = stringToArrayBuffer(string, 'hex')
+    const startBuffer = new Uint8Array(parseNumber(stringBuffer.byteLength, withBStr))
+    return concatenate(startBuffer, stringBuffer)
 }
 
 export const ObjectLike: Encoder = (object: object, options = {}): ArrayBuffer => {
@@ -154,24 +152,24 @@ export const ObjectLike: Encoder = (object: object, options = {}): ArrayBuffer =
     } // end
     function handleArray(iter: IterableIterator<[value: unknown, value: unknown]>): ArrayBuffer {
         let length = 0
-        const followingBuffers: Buffer[] = []
+        const followingBuffers: Uint8Array[] = []
         for (const [value] of iter) {
             length++
-            followingBuffers.push(Buffer.from(encode(value)))
+            followingBuffers.push(new Uint8Array(encode(value)))
         }
-        const startBuffer = Buffer.from(parseNumber(length, withSet))
-        return Buffer.concat([startBuffer, ...followingBuffers])
+        const startBuffer = new Uint8Array(parseNumber(length, withSet))
+        return concatenate(startBuffer, ...followingBuffers)
     }
     function handleObjectLike(iter: IterableIterator<[key: unknown, value: unknown]>): ArrayBuffer {
         let length = 0
-        const followingBuffers: Buffer[] = []
+        const followingBuffers: Uint8Array[] = []
         for (const [key, value] of iter) {
             length++
-            followingBuffers.push(Buffer.from(encode(key)))
-            followingBuffers.push(Buffer.from(encode(value)))
+            followingBuffers.push(new Uint8Array(encode(key)))
+            followingBuffers.push(new Uint8Array(encode(value)))
         }
-        const startBuffer = Buffer.from(parseNumber(length, withMap))
-        return Buffer.concat([startBuffer, ...followingBuffers])
+        const startBuffer = new Uint8Array(parseNumber(length, withMap))
+        return concatenate(startBuffer, ...followingBuffers)
     }
 }
 
@@ -209,17 +207,17 @@ export function encode<T extends any = any>(data: T, options: EncodeOptions = {}
 
 // todo: refactor to parseObject
 export function parseJsonWebKey(jwk: JsonWebKey): ArrayBuffer {
-    const array = [] as Buffer[]
+    const array = [] as Uint8Array[]
     let length = 0
     for (let key of Object.getOwnPropertyNames(jwk)) {
         const [label, types] = keyToCOSEKey(key)
-        array.push(Buffer.from(encode(label)))
-        array.push(Buffer.from(encode(jwk[key])))
+        array.push(new Uint8Array(encode(label)))
+        array.push(new Uint8Array(encode(jwk[key])))
         length++
     }
     // add length
-    array.unshift(Buffer.from(parseNumber(length, withMap)))
-    return Buffer.concat(array)
+    array.unshift(new Uint8Array(parseNumber(length, withMap)))
+    return concatenate(...array)
 
     function keyToCOSEKey(key: keyof JsonWebKey): [label: number, allowedType: Type[]] {
         switch (key) {

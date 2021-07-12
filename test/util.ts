@@ -1,5 +1,3 @@
-import { Buffer } from 'buffer'
-
 export function parseAuthData(buffer: ArrayBuffer) {
     const textDecoder = new TextDecoder()
     const rpIdHash = buffer.slice(0, 32)
