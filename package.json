@@ -26,12 +26,14 @@
     "serve": "http-server -o -c-1"
   },
   "dependencies": {
+    "btoa": "^1.2.1",
     "cbor-redux": "^0.3.1",
     "tslib": "^2.2.0"
   },
   "devDependencies": {
     "@peculiar/webcrypto": "^1.1.7",
     "@rollup/plugin-sucrase": "^3.1.0",
+    "@types/btoa": "^1.2.3",
     "@types/jest": "^26.0.23",
     "cbor": "^7.0.5",
     "eslint": "^7.29.0",

@@ -165,11 +165,7 @@ export function concatenate(...arrays: (ArrayBuffer | Uint8Array)[]): ArrayBuffe
     const buffer = new Uint8Array(totalLength)
     buffersLengths.reduce(function (p, c, i) {
         const v = arrays[i]
-        if (v instanceof ArrayBuffer) {
-            buffer.set(new Uint8Array(v), p)
-        } else {
-            buffer.set(new Uint8Array(v.buffer), p)
-        }
+        buffer.set(new Uint8Array(v), p)
         return p + c
     }, 0)
     return buffer.buffer

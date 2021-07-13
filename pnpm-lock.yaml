@@ -3,7 +3,9 @@ lockfileVersion: 5.3
 specifiers:
   '@peculiar/webcrypto': ^1.1.7
   '@rollup/plugin-sucrase': ^3.1.0
+  '@types/btoa': ^1.2.3
   '@types/jest': ^26.0.23
+  btoa: ^1.2.1
   cbor: ^7.0.5
   cbor-redux: ^0.3.1
   eslint: ^7.29.0
@@ -20,12 +22,14 @@ specifiers:
   typescript: ^4.3.2
 
 dependencies:
+  btoa: 1.2.1
   cbor-redux: 0.3.1
   tslib: 2.2.0
 
 devDependencies:
   '@peculiar/webcrypto': 1.1.7
   '@rollup/plugin-sucrase': 3.1.0_rollup@2.50.5
+  '@types/btoa': 1.2.3
   '@types/jest': 26.0.23
   cbor: 7.0.5
   eslint: 7.29.0
@@ -644,7 +648,7 @@ packages:
   /@peculiar/asn1-schema/2.0.36:
     resolution: {integrity: sha512-x7fdMR6bzOBct2a0PLukrmVrrehHX5uisKRDWN2Bs1HojXd5nCi7MAQeV+umRxPK1oSJDstTBhGq3sLzDbL8Vw==}
     dependencies:
-      '@types/asn1js': 2.0.0
+      '@types/asn1js': 2.0.2
       asn1js: 2.1.1
       pvtsutils: 1.1.7
       tslib: 2.2.0
@@ -708,8 +712,8 @@ packages:
     engines: {node: '>= 6'}
     dev: true
 
-  /@types/asn1js/2.0.0:
-    resolution: {integrity: sha512-Jjzp5EqU0hNpADctc/UqhiFbY1y2MqIxBVa2S4dBlbnZHTLPMuggoL5q43X63LpsOIINRDirBjP56DUUKIUWIA==}
+  /@types/asn1js/2.0.2:
+    resolution: {integrity: sha512-t4YHCgtD+ERvH0FyxvNlYwJ2ezhqw7t+Ygh4urQ7dJER8i185JPv6oIM3ey5YQmGN6Zp9EMbpohkjZi9t3UxwA==}
     dev: true
 
   /@types/babel__core/7.1.14:
@@ -739,6 +743,12 @@ packages:
     resolution: {integrity: sha512-Vs0hm0vPahPMYi9tDjtP66llufgO3ST16WXaSTtDGEl9cewAl3AibmxWw6TINOqHPT9z0uABKAYjT9jNSg4npw==}
     dependencies:
       '@babel/types': 7.14.5
+    dev: true
+
+  /@types/btoa/1.2.3:
+    resolution: {integrity: sha512-ANNCZICS/ofxhzUl8V1DniBJs+sFQ+Yg5am1ZwVEf/sxoKY/J2+h5Fuw3xUErlZ7eJLdgzukBjZwnsV6+/2Rmg==}
+    dependencies:
+      '@types/node': 16.3.1
     dev: true
 
   /@types/estree/0.0.39:
@@ -776,6 +786,10 @@ packages:
 
   /@types/node/15.12.4:
     resolution: {integrity: sha512-zrNj1+yqYF4WskCMOHwN+w9iuD12+dGm0rQ35HLl9/Ouuq52cEtd0CH9qMgrdNmi5ejC1/V7vKEXYubB+65DkA==}
+    dev: true
+
+  /@types/node/16.3.1:
+    resolution: {integrity: sha512-N87VuQi7HEeRJkhzovao/JviiqKjDKMVKxKMfUvSKw+MbkbW8R0nA3fi/MQhhlxV2fQ+2ReM+/Nt4efdrJx3zA==}
     dev: true
 
   /@types/prettier/2.3.0:
@@ -1065,6 +1079,12 @@ packages:
     dependencies:
       node-int64: 0.4.0
     dev: true
+
+  /btoa/1.2.1:
+    resolution: {integrity: sha512-SB4/MIGlsiVkMcHmT+pSmIPoNDoHg+7cMzmt3Uxt628MTz2487DKSqK/fuhFBrkuqrYv5UCEnACpF4dTFNKc/g==}
+    engines: {node: '>= 0.4.0'}
+    hasBin: true
+    dev: false
 
   /buffer-from/1.1.1:
     resolution: {integrity: sha512-MQcXEUbCKtEo7bhqEs6560Hyd4XaovZlO/k9V3hjVUF/zwW7KBVdSK4gIt/bzwS9MbR5qob+F5jusZsb0YQK2A==}
