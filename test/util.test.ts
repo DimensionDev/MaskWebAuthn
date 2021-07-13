@@ -25,6 +25,12 @@ test('serialize collected clientData', () => {
     ).toMatchSnapshot('serialized collected client data')
 })
 
+test('contact buffer', () => {
+    const view = new DataView(new Uint16Array(1).buffer)
+    view.setUint16(0, 4096, false)
+    expect(concatenate(view.buffer)).toEqual(view.buffer)
+})
+
 test('ccd to string', () => {
     expect(ccdToString('http://google.com/foo?=123')).toBe('"http://google.com/foo?=123"')
     expect(ccdToString('Bob: "你好！"')).toBe('"Bob: \\"你好！\\""')

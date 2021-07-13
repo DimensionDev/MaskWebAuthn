@@ -2,6 +2,7 @@ import { concatenate, encodeAuthData, serializeCollectedClientData, sha256 } fro
 import { Buffer } from 'buffer'
 import { encode } from 'cbor-redux'
 import type { CollectedClientData, AttestationObject } from '../../types/interface'
+import btoa from 'btoa'
 
 export enum PublicKeyAlgorithm {
     ES256 = -7,
@@ -37,17 +38,16 @@ export async function generateCreationResponse(
         throw new DOMException('AbortError')
     }
 
-    const rawPublicKey = await crypto.subtle.exportKey('raw', publicKey)
-    const idBuffer = Buffer.from(rawPublicKey)
+    const publicKeyJwk = await crypto.subtle.exportKey('jwk', publicKey)
 
     const authData = encodeAuthData({
-        rpIdHash: await sha256(Buffer.from(rpID, 'utf-8')),
+        rpIdHash: await sha256(Buffer.from(new URL(rpID).hostname, 'utf-8')),
         flags: 0,
         signCount,
         attestedCredentialData: {
             aaugid: '0', // we not support aaguid
             credentialId,
-            credentialPublicKey: await crypto.subtle.exportKey('jwk', publicKey),
+            credentialPublicKey: publicKeyJwk,
         },
         extensions: undefined,
     })
@@ -77,8 +77,8 @@ export async function generateCreationResponse(
     const attestationObject = encode<AttestationObject>(obj)
 
     return {
-        id: idBuffer.toString('base64'),
-        rawId: idBuffer.buffer,
+        id: btoa(String.fromCharCode(...new Uint8Array(credentialId))),
+        rawId: credentialId,
         response: {
             clientDataJSON: clientDataJsonBuffer,
             attestationObject,
