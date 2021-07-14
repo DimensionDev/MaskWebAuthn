@@ -1,7 +1,7 @@
 import { encode, Number, parseJsonWebKey, UTF8String } from '../backend/cbor'
 import { encode as reduxEncode, decode } from 'cbor-redux'
 import { concatenate } from '../backend/util'
-import { ecJwk } from '../backend/shared'
+import { ecJwk } from './util'
 
 const validCborPublicKey = new Uint8Array([
     -91, 1, 2, 3, 38, 32, 1, 33, 88, 32, -13, 21, 122, -20, 72, -61, 72, 112, 94, -105, -105, 29, -8, -87, 13, 85, 82,
