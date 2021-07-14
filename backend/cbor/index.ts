@@ -1,4 +1,5 @@
 import { concatenate, stringToArrayBuffer } from '../util'
+import { Alg, CoseKey, Crv, Kty } from '../../types/interface'
 
 declare global {
     interface ObjectConstructor {
@@ -205,38 +206,30 @@ export function encode<T extends any = any>(data: T, options: EncodeOptions = {}
     }
 }
 
-// todo: refactor to parseObject
+// if second element exists, that means the valueMap for the value
+const keyToCoseMap = {
+    kty: Kty,
+    crv: Crv,
+    alg: Alg,
+} as Record<string, Record<string, any> | undefined>
+
 export function parseJsonWebKey(jwk: JsonWebKey): ArrayBuffer {
     const array = [] as Uint8Array[]
     let length = 0
     for (let key of Object.getOwnPropertyNames(jwk)) {
-        const [label, types] = keyToCOSEKey(key)
-        array.push(new Uint8Array(encode(label)))
-        array.push(new Uint8Array(encode(jwk[key])))
-        length++
+        if (key in CoseKey) {
+            const newKey = CoseKey[key as keyof typeof CoseKey]
+            const valueMap = keyToCoseMap[key]
+            const newValue = valueMap ? valueMap[jwk[key] as keyof typeof valueMap] : jwk[key]
+            if (newKey == null || newValue == null) {
+                throw new TypeError('not found key')
+            }
+            array.push(new Uint8Array(encode(newKey)))
+            array.push(new Uint8Array(encode(newValue)))
+            length++
+        }
     }
     // add length
     array.unshift(new Uint8Array(parseNumber(length, withMap)))
     return concatenate(...array)
-
-    function keyToCOSEKey(key: keyof JsonWebKey): [label: number, allowedType: Type[]] {
-        switch (key) {
-            case 'kty':
-                return [1, [MajorType.UTF8String, MajorType.PosInt, MajorType.NegInt]]
-            case 'alg':
-                return [3, [MajorType.ByteString]]
-            case 'key_ops':
-                return [4, [MajorType.UTF8String, MajorType.PosInt, MajorType.NegInt]]
-            case 'crv':
-                return [-1, [MajorType.UTF8String, MajorType.PosInt, MajorType.NegInt]]
-            case 'x':
-                return [-2, [MajorType.ByteString]]
-            case 'y':
-                return [-3, [MajorType.ByteString, SimpleType.True, SimpleType.False]]
-            case 'd':
-                return [-4, [MajorType.ByteString]]
-            default:
-                throw new TypeError()
-        }
-    }
 }

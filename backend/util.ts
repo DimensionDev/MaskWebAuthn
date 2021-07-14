@@ -1,5 +1,5 @@
 import type { CollectedClientData } from '../types/interface'
-import { encode } from 'cbor-redux'
+import { parseJsonWebKey } from './cbor'
 
 export function isRegistrableDomain(hostSuffixString: string, originalHost: string): boolean {
     // refs:
@@ -172,23 +172,6 @@ export function concatenate(...arrays: (ArrayBuffer | Uint8Array)[]): ArrayBuffe
     return buffer.buffer
 }
 
-export function jwkToCOSEKey(jwk: JsonWebKey): ArrayBuffer {
-    // todo: currently we only support ecdh p-256 algorithm
-    const array: Uint8Array[] = []
-    array.push(new Uint8Array([0xa5])) // size 5 of map
-    array.push(new Uint8Array([0x01])) // key: kty
-    array.push(new Uint8Array([0x02])) // value: EC
-    array.push(new Uint8Array([0x20])) // key: crv
-    array.push(new Uint8Array([0x01])) // value: P-256
-    array.push(new Uint8Array([0x03])) // key: alg
-    array.push(new Uint8Array([0x26])) // value: -7
-    array.push(new Uint8Array(encode(-2))) // key: x
-    array.push(new Uint8Array(encode(jwk.x)))
-    array.push(new Uint8Array(encode(-3))) // key: y
-    array.push(new Uint8Array(encode(jwk.y)))
-    return concatenate(...array)
-}
-
 export function encodeAuthData(authData: AuthData): ArrayBuffer {
     // set idHash, 32 byte
     if (authData.rpIdHash.byteLength !== 32) {
@@ -196,6 +179,7 @@ export function encodeAuthData(authData: AuthData): ArrayBuffer {
     }
     // set flags, 1 byte
     const flagsBuffer = new Uint8Array(1)
+    // todo: refactor AuthDataFlag
     flagsBuffer.set([authData.flags | AuthDataFlag.AT | AuthDataFlag.UV], 0)
     // set signCount, 4 byte
     const signCountBuffer = new Uint32Array(1)
@@ -207,7 +191,7 @@ export function encodeAuthData(authData: AuthData): ArrayBuffer {
     const credentialIdLengthBuffer = new Uint16Array(1)
     view = new DataView(credentialIdLengthBuffer.buffer)
     view.setUint16(0, credentialId.byteLength, false)
-    const publicKeyBuffer = jwkToCOSEKey(credentialPublicKey)
+    const publicKeyBuffer = parseJsonWebKey(credentialPublicKey)
     return concatenate(
         authData.rpIdHash,
         flagsBuffer.buffer,

@@ -1,48 +1,44 @@
-export function parseAuthData(buffer: ArrayBuffer) {
-    const textDecoder = new TextDecoder()
-    const rpIdHash = buffer.slice(0, 32)
-    buffer = buffer.slice(32)
-    textDecoder.decode(buffer)
+import NodeCrypto from 'crypto'
+import { decode } from 'cbor-redux'
+import type { PublicKeyCredential } from '../types/interface'
+import type { EcCosePublicKey } from '../types/interface'
+import { Alg, CoseKey, Crv, Kty } from '../types/interface'
+import { sha256 } from '../backend/util'
 
-    const flagsBuf = buffer.slice(0, 1)
+export const parseAuthData = (buffer: Buffer) => {
+    let rpIdHash = buffer.slice(0, 32)
+    buffer = buffer.slice(32)
+    let flagsBuf = buffer.slice(0, 1)
     buffer = buffer.slice(1)
-    const flagsInt = new Uint8Array(flagsBuf)[0]
-    const flags = {
+    let flagsInt = flagsBuf[0]
+    let flags = {
         up: !!(flagsInt & 0x01),
         uv: !!(flagsInt & 0x04),
         at: !!(flagsInt & 0x40),
         ed: !!(flagsInt & 0x80),
         flagsInt,
     }
-    const counterBuf = buffer.slice(0, 4)
-    buffer = buffer.slice(4)
 
-    let bufferView = new DataView(counterBuf)
-    const counter = bufferView.getUint32(0)
-    let aaguid
-    let credID
-    let COSEPublicKey
+    let counterBuf = Buffer.from(buffer.slice(0, 4))
+    buffer = buffer.slice(4)
+    let counter = counterBuf.readUInt32BE(0)
+
+    let aaguid = undefined
+    let credID = undefined
+    let COSEPublicKey = undefined
+
     if (flags.at) {
         aaguid = buffer.slice(0, 16)
         buffer = buffer.slice(16)
-        const credIDLenBuf = buffer.slice(0, 2)
+        let credIDLenBuf = Buffer.from(buffer.slice(0, 2))
         buffer = buffer.slice(2)
-        bufferView = new DataView(credIDLenBuf)
-        const credIDLen = bufferView.getUint16(0)
+        let credIDLen = credIDLenBuf.readUInt16BE(0)
         credID = buffer.slice(0, credIDLen)
         buffer = buffer.slice(credIDLen)
         COSEPublicKey = buffer
     }
-    return {
-        rpIdHash,
-        flagsBuf,
-        flags,
-        counter,
-        counterBuf,
-        aaguid,
-        credID,
-        COSEPublicKey,
-    }
+
+    return { rpIdHash, flagsBuf, flags, counter, counterBuf, aaguid, credID, COSEPublicKey }
 }
 
 export async function cryptoKeyToPem(key: CryptoKey) {
@@ -67,4 +63,58 @@ export function hex2arrayBuffer(data: string): ArrayBuffer {
     }
 
     return ret.buffer
+}
+
+export const verifyPackedAttestation = async (keys: CryptoKeyPair, webAuthnResponse: PublicKeyCredential) => {
+    const attestationBuffer = Buffer.from(webAuthnResponse.response.attestationObject)
+    const attestationStruct = decode(attestationBuffer.buffer)
+
+    const authDataStruct = parseAuthData(attestationStruct.authData)
+
+    const clientDataJSONBuffer = Buffer.from(webAuthnResponse.response.clientDataJSON)
+    const clientDataHash = Buffer.from(await sha256(clientDataJSONBuffer))
+    const originalDataBuffer = Buffer.concat([attestationStruct.authData, clientDataHash])
+
+    const signatureBuffer = attestationStruct.attStmt.sig
+    let signatureIsValid = false
+
+    if (!authDataStruct.COSEPublicKey) {
+        throw new TypeError('COSE Public Key not found')
+    }
+
+    let publicKeyCose = decode(authDataStruct.COSEPublicKey.buffer) as EcCosePublicKey
+    const alg = Alg[publicKeyCose[CoseKey.alg]]
+    if (publicKeyCose[CoseKey.kty] === Kty.EC) {
+        const x = publicKeyCose[CoseKey.x]
+        const y = publicKeyCose[CoseKey.y]
+        const crv = Crv[publicKeyCose[CoseKey.crv]]
+        const kty = Kty[publicKeyCose[CoseKey.kty]]
+
+        // start verify
+        const publicKey = NodeCrypto.createPublicKey({
+            format: 'jwk',
+            key: {
+                x,
+                y,
+                crv,
+                kty,
+                alg,
+            },
+        })
+
+        // todo: refactor this to node implementation
+        signatureIsValid = await crypto.subtle.verify(
+            {
+                name: 'ECDSA',
+                hash: 'SHA-256',
+            },
+            keys.publicKey,
+            signatureBuffer,
+            originalDataBuffer,
+        )
+    }
+
+    if (!signatureIsValid) throw new Error('Failed to verify the signature!')
+
+    return true
 }
