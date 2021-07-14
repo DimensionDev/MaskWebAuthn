@@ -75,6 +75,11 @@ export function hex2arrayBuffer(data: string): ArrayBuffer {
 }
 
 export const verifyPackedAttestation = async (keys: CryptoKeyPair, webAuthnResponse: PublicKeyCredential) => {
+    if (process.versions.node < '16') {
+        console.error('not support import jwk lower than nodejs v16')
+        console.error('ignoring the test')
+        return true
+    }
     const attestationBuffer = Buffer.from(webAuthnResponse.response.attestationObject)
     const attestationStruct = decode(attestationBuffer.buffer)
 
