@@ -1,9 +1,10 @@
 /* eslint-env jest */
-import { generateCreationResponse, PublicKeyAlgorithm } from '../backend/authenticator'
+import { generateCreationResponse } from '../backend/authenticator'
 import { Buffer } from 'buffer'
 import { decode } from 'cbor-redux'
 import { verify } from '../api/util'
 import { verifyPackedAttestation } from './util'
+import { Alg } from '../types/interface'
 
 let credentialID: ArrayBuffer
 let keys: CryptoKeyPair
@@ -41,7 +42,7 @@ test('generate response', async () => {
     expect(Buffer.from(dataJson.challenge, 'base64').every((v) => v === 3)).toBe(true)
     const attestation = decode(attestationObject)
     expect(attestation.fmt).toBe('packed')
-    expect(attestation.attStmt.alg).toBe(PublicKeyAlgorithm.ES256)
+    expect(attestation.attStmt.alg).toBe(Alg.ES256)
     expect(await verify(keys.publicKey, response)).toBe(true)
 })
 
