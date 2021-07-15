@@ -17,7 +17,7 @@ function getSignatureParams(alg: Alg): EcdsaParams {
     }
 }
 
-const supportSet = new Set([Alg.ES256]) as ReadonlySet<number>
+const supportSet = new Set([Alg.ES256]) as ReadonlySet<Alg>
 
 export async function generateCreationResponse(
     // backend creator provided
