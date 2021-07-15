@@ -3,6 +3,7 @@ import { Buffer } from 'buffer'
 import { encode } from 'cbor-redux'
 import type { CollectedClientData, AttestationObject } from '../../types/interface'
 import btoa from 'btoa'
+import type { PublicKeyCredential } from '../../types/interface'
 
 export enum PublicKeyAlgorithm {
     ES256 = -7,
@@ -84,8 +85,5 @@ export async function generateCreationResponse(
             attestationObject,
         } as AuthenticatorAttestationResponse,
         type: 'public-key',
-        getClientExtensionResults(): AuthenticationExtensionsClientOutputs {
-            return {}
-        },
     }
 }

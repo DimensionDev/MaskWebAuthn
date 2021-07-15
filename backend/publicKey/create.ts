@@ -2,6 +2,7 @@ import { generateCreationResponse, PublicKeyAlgorithm } from '../authenticator'
 import type { CreateAuthenticatorOptions } from '../index'
 import { checkUserVerification, filterCredentials } from '../util'
 import type { CollectedClientData } from '../../types/interface'
+import type { PublicKeyCredential } from '../../types/interface'
 
 /**
  *

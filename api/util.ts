@@ -1,5 +1,5 @@
 import { decode } from 'cbor-redux'
-import type { AttestationObject } from '../types/interface'
+import type { AttestationObject, PublicKeyCredential } from '../types/interface'
 
 export function concatenate(...arrays: (ArrayBuffer | Uint8Array)[]): ArrayBuffer {
     const buffersLengths = arrays.map((array) => array.byteLength)
@@ -18,7 +18,7 @@ export function concatenate(...arrays: (ArrayBuffer | Uint8Array)[]): ArrayBuffe
 }
 
 export async function verify(publicKey: CryptoKey, credential: PublicKeyCredential): Promise<boolean> {
-    const { clientDataJSON, attestationObject } = credential.response as AuthenticatorAttestationResponse
+    const { clientDataJSON, attestationObject } = credential.response
     if (attestationObject) {
         const decodedAttestationObject = decode(attestationObject) as AttestationObject
         const {

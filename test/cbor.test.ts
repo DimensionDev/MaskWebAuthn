@@ -1,5 +1,7 @@
 import { encode, Number, parseJsonWebKey, UTF8String } from '../backend/cbor'
-import { decode } from 'cbor-redux'
+import { encode as reduxEncode, decode } from 'cbor-redux'
+import { concatenate } from '../backend/util'
+import { ecJwk } from './util'
 
 const validCborPublicKey = new Uint8Array([
     -91, 1, 2, 3, 38, 32, 1, 33, 88, 32, -13, 21, 122, -20, 72, -61, 72, 112, 94, -105, -105, 29, -8, -87, 13, 85, 82,
@@ -65,4 +67,51 @@ test('encode', () => {
     expect(encode(1000000000000)).toStrictEqual(
         Buffer.from([0x1b, 0x00, 0x00, 0x00, 0xe8, 0xd4, 0xa5, 0x10, 0x00]).buffer,
     )
+})
+
+describe('match rfc 8152', () => {
+    test('simple example', () => {
+        const response = parseJsonWebKey({
+            x: '',
+        })
+        expect(response).toStrictEqual(
+            new Uint8Array([
+                0xa1, // size 1 of map
+                0x21, // negative number -1
+                0x60, // utf8 string with empty
+            ]).buffer,
+        )
+    })
+    test('real example', () => {
+        function jwkToCOSEKey(jwkLike: { x: string; y: string }): ArrayBuffer {
+            const array: Uint8Array[] = []
+            array.push(new Uint8Array([0xa5])) // size 5 of map
+            array.push(new Uint8Array([0x01])) // key: kty
+            array.push(new Uint8Array([0x02])) // value: EC
+            array.push(new Uint8Array([0x20])) // key: crv
+            array.push(new Uint8Array([0x01])) // value: P-256
+            array.push(new Uint8Array([0x03])) // key: alg
+            array.push(new Uint8Array([0x26])) // value: -7
+            array.push(new Uint8Array(reduxEncode(-2))) // key: x
+            array.push(new Uint8Array(reduxEncode(jwkLike.x)))
+            array.push(new Uint8Array(reduxEncode(-3))) // key: y
+            array.push(new Uint8Array(reduxEncode(jwkLike.y)))
+            return concatenate(...array)
+        }
+
+        const expected = jwkToCOSEKey({
+            x: ecJwk.x,
+            y: ecJwk.y,
+        })
+
+        const actual = parseJsonWebKey({
+            kty: ecJwk.kty,
+            crv: ecJwk.crv,
+            alg: ecJwk.alg,
+            x: ecJwk.x,
+            y: ecJwk.y,
+        })
+
+        expect(actual).toStrictEqual(expected)
+    })
 })
