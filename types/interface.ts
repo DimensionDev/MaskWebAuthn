@@ -33,9 +33,9 @@ export enum CoseKey {
 }
 
 export interface EcCosePublicKey {
-    [CoseKey.kty]: number
-    [CoseKey.alg]: number
-    [CoseKey.crv]: number
+    [CoseKey.kty]: Kty
+    [CoseKey.alg]: Alg
+    [CoseKey.crv]: Crv
     [CoseKey.x]: string
     [CoseKey.y]: string
 }
