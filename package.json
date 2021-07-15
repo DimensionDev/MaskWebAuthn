@@ -27,6 +27,7 @@
   },
   "dependencies": {
     "btoa": "^1.2.1",
+    "buffer": "^6.0.3",
     "cbor-redux": "^0.3.1",
     "tslib": "^2.2.0"
   },
