@@ -1,8 +1,9 @@
-import { generateCreationResponse, PublicKeyAlgorithm } from '../authenticator'
+import { generateCreationResponse } from '../authenticator'
 import type { CreateAuthenticatorOptions } from '../index'
 import { checkUserVerification, filterCredentials } from '../util'
 import type { CollectedClientData } from '../../types/interface'
 import type { PublicKeyCredential } from '../../types/interface'
+import { Alg } from '../../types/interface'
 
 /**
  *
@@ -36,12 +37,9 @@ export async function create(
                 credTypesAndPubKeyAlgorithms.push({ type: param.type, alg: param.alg })
             }
         }
-        if (!credTypesAndPubKeyAlgorithms.find((alg) => alg.alg === PublicKeyAlgorithm.ES256)) {
-            throw new TypeError('Not Support Algorithms')
-        }
     } else {
         // default algorithm
-        credTypesAndPubKeyAlgorithms.push({ type: 'public-key', alg: PublicKeyAlgorithm.ES256 })
+        credTypesAndPubKeyAlgorithms.push({ type: 'public-key', alg: Alg.ES256 })
     }
 
     const collectedClientData: CollectedClientData = {

@@ -4,13 +4,10 @@ import { encode } from 'cbor-redux'
 import type { CollectedClientData, AttestationObject } from '../../types/interface'
 import btoa from 'btoa'
 import type { PublicKeyCredential } from '../../types/interface'
+import { Alg } from '../../types/interface'
 
-export enum PublicKeyAlgorithm {
-    ES256 = -7,
-}
-
-function getSignatureParams(alg: PublicKeyAlgorithm): EcdsaParams {
-    if (alg === PublicKeyAlgorithm.ES256) {
+function getSignatureParams(alg: Alg): EcdsaParams {
+    if (alg === Alg.ES256) {
         return {
             name: 'ECDSA',
             hash: 'SHA-256',
@@ -20,7 +17,7 @@ function getSignatureParams(alg: PublicKeyAlgorithm): EcdsaParams {
     }
 }
 
-const supportSet = new Set([PublicKeyAlgorithm.ES256])
+const supportSet = new Set([Alg.ES256]) as ReadonlySet<Alg>
 
 export async function generateCreationResponse(
     // backend creator provided
@@ -40,9 +37,11 @@ export async function generateCreationResponse(
     }
 
     const publicKeyJwk = await crypto.subtle.exportKey('jwk', publicKey)
+    const rpHostname: ArrayBuffer = Buffer.from(new URL(rpID).hostname, 'utf-8').buffer
+    const rpHash = await sha256(rpHostname)
 
     const authData = encodeAuthData({
-        rpIdHash: await sha256(Buffer.from(new URL(rpID).hostname, 'utf-8')),
+        rpIdHash: rpHash,
         flags: 0,
         signCount,
         attestedCredentialData: {
@@ -78,12 +77,12 @@ export async function generateCreationResponse(
     const attestationObject = encode<AttestationObject>(obj)
 
     return {
+        type: 'public-key',
         id: btoa(String.fromCharCode(...new Uint8Array(credentialId))),
         rawId: credentialId,
         response: {
             clientDataJSON: clientDataJsonBuffer,
             attestationObject,
-        } as AuthenticatorAttestationResponse,
-        type: 'public-key',
+        },
     }
 }
