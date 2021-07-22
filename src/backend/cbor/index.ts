@@ -7,18 +7,9 @@ declare global {
     }
 }
 
-enum kty {
-    OKP = 1,
-    EC2 = 2,
-    Symmetric = 4,
-    Reserved = 0,
-}
-
 const INT8_MAX = 2 ** 8 - 1
 const INT16_MAX = 2 ** 16 - 1
 const INT32_MAX = 2 ** 32 - 1
-const INF_MAP_START = 0xbf
-const BREAK = 0xff
 
 export enum MajorType {
     PosInt = 0b000, // 0

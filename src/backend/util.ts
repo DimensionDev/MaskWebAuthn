@@ -51,6 +51,8 @@ export function checkUserVerification(userVerification: UserVerificationRequirem
 export function filterCredentials(credentials: PublicKeyCredentialDescriptor[]): PublicKeyCredentialDescriptor[] {
     return credentials.filter((credential) => {
         if (credential.transports && Array.isArray(credential.transports) && credential.transports.length > 0) {
+            // https://www.w3.org/TR/webauthn-3/#enum-transport
+            // we not support these types
             return false
         } else {
             return credential.type === 'public-key'
@@ -115,6 +117,7 @@ export async function sha256(message: ArrayBuffer): Promise<ArrayBuffer> {
     return crypto.subtle.digest('SHA-256', message)
 }
 
+// https://www.w3.org/TR/webauthn-3/#flags
 export enum AuthDataFlag {
     ED = 1 << 7,
     AT = 1 << 6,
@@ -122,7 +125,7 @@ export enum AuthDataFlag {
     UP = 1 << 0,
 }
 
-export type AuthData = {
+export type InternalAuthData = {
     rpIdHash: ArrayBuffer // sha256 hashed replying party id
     flags: AuthDataFlag
     signCount: number
@@ -172,23 +175,25 @@ export function concatenate(...arrays: (ArrayBuffer | Uint8Array)[]): ArrayBuffe
     return buffer.buffer
 }
 
-export function encodeAuthData(authData: AuthData): ArrayBuffer {
+export function encodeAuthData(authData: InternalAuthData): ArrayBuffer {
     // set idHash, 32 byte
     if (authData.rpIdHash.byteLength !== 32) {
         throw new TypeError('length of rpIdHash must be 32.')
     }
     // set flags, 1 byte
     const flagsBuffer = new Uint8Array(1)
-    // todo: refactor AuthDataFlag
+    // todo: refactor AuthDataFlag\
+    //  move `AuthDataFlag.AT` and `AuthDataFlag.UV` to upper level
+    //  currently we hard code `AT` and `UV`, but should check and set in the `options` check step.
     flagsBuffer.set([authData.flags | AuthDataFlag.AT | AuthDataFlag.UV], 0)
     // set signCount, 4 byte
-    const signCountBuffer = new Uint32Array(1)
+    const signCountBuffer = new Uint8Array(4)
     let view = new DataView(signCountBuffer.buffer)
     view.setUint32(0, authData.signCount, false)
     // set attestedCredentialData
     const { credentialId, credentialPublicKey } = authData.attestedCredentialData
-    const aaguidBuffer = new Uint32Array(4).fill(0) // is zero
-    const credentialIdLengthBuffer = new Uint16Array(1)
+    const aaguidBuffer = new Uint8Array(16).fill(0) // is zero
+    const credentialIdLengthBuffer = new Uint8Array(2)
     view = new DataView(credentialIdLengthBuffer.buffer)
     view.setUint16(0, credentialId.byteLength, false)
     const publicKeyBuffer = parseJsonWebKey(credentialPublicKey)
@@ -201,4 +206,27 @@ export function encodeAuthData(authData: AuthData): ArrayBuffer {
         credentialId,
         publicKeyBuffer,
     )
+}
+
+export interface NormalizedCreateOptions extends PublicKeyCredentialCreationOptions {
+    timeout: number
+    rpId: string
+    challenge: ArrayBuffer
+    crossOrigin: boolean
+}
+
+export interface NormalizedRequestOptions extends PublicKeyCredentialRequestOptions {
+    rpId: string
+    challenge: ArrayBuffer
+    crossOrigin: boolean
+}
+
+// todo: fixme
+export function normalizeRequestOption(options: PublicKeyCredentialRequestOptions): NormalizedRequestOptions {
+    return options as any
+}
+
+// todo: fixme
+export function normalizeCreateOption(options: PublicKeyCredentialCreationOptions): NormalizedCreateOptions {
+    return options as any
 }

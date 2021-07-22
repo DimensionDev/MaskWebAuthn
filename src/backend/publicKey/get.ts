@@ -1,5 +1,5 @@
 import type { CreateAuthenticatorOptions } from '../index'
-import { checkUserVerification, filterCredentials } from '../util'
+import { checkUserVerification, filterCredentials, normalizeRequestOption } from '../util'
 import { generateCreationResponse } from '../authenticator'
 import type { CollectedClientData } from '../../types/interface'
 
@@ -8,24 +8,21 @@ export async function get(
     options: PublicKeyCredentialRequestOptions,
     signal?: AbortSignal,
 ) {
-    // we dont trust these parameters from upstream
-    delete options.timeout
-    delete options.rpId
     if (signal?.aborted) {
         return Promise.reject(new DOMException('AbortError'))
     }
-    const normalizedOptions = await createOptions.getNormalizedCreateOptions()
+    const { ...normalizedOptions } = normalizeRequestOption(options)
     const timeout = normalizedOptions.timeout as number
     const abortController = new AbortController()
     const expiredSignal = abortController.signal
-    const rpID = normalizedOptions.rpID
+    const rpID = normalizedOptions.rpId
 
     setTimeout(() => abortController.abort(), timeout)
 
     const collectedClientData: CollectedClientData = {
         type: 'webauthn.get',
         challenge: Buffer.from(normalizedOptions.challenge).toString('base64'),
-        origin: normalizedOptions.rpID,
+        origin: normalizedOptions.rpId,
         crossOrigin: normalizedOptions.crossOrigin,
         tokenBinding: null,
     }
@@ -37,8 +34,8 @@ export async function get(
         throw new TypeError('must user verification')
     }
 
-    let keys: CryptoKeyPair | null = null
-    let credentialID: ArrayBuffer | null = null
+    let keys: CryptoKeyPair | null
+    let credentialID: ArrayBuffer
     // see https://developer.mozilla.org/en-US/docs/Web/API/PublicKeyCredentialCreationOptions/excludeCredentials
     //  this option used for the server to create new credentials for an existing user.
     if (Array.isArray(allowCredentials)) {
