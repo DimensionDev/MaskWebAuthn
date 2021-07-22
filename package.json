@@ -13,8 +13,8 @@
     "backend.d.ts"
   ],
   "exports": {
-    "api": "./dist/api.js",
-    "backend": "./dist/backend.js"
+    "./api": "./dist/api.js",
+    "./backend": "./dist/backend.js"
   },
   "scripts": {
     "start": "run-p watch-tsc watch-rollup serve",
