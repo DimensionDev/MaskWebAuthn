@@ -43,6 +43,12 @@ const publicKeyAuthenticator = createPublicKeyAuthenticator({
             resolve(count)
         })
     },
+    createKeyPairByKeyWrap(
+        rpID: string,
+        excludeCredentialIDs: ArrayBuffer[],
+    ): Promise<readonly [key: CryptoKeyPair, credentialID: ArrayBuffer]> {
+        return Promise.resolve([keys, credentialID])
+    },
     getKeyPairByKeyWrap(rpID: string, credentialIDs: ArrayBuffer[]): Promise<[CryptoKeyPair, ArrayBuffer]> {
         return Promise.resolve([keys, credentialID])
     },
