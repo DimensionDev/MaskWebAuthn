@@ -8,7 +8,9 @@
   "repository": "https://github.com/DimensionDev/MaskWebAuthn",
   "license": "MIT",
   "files": [
-    "dist"
+    "dist",
+    "api.d.ts",
+    "backend.d.ts"
   ],
   "exports": {
     "api": "./dist/api.js",

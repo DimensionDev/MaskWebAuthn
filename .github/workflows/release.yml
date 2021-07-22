@@ -18,5 +18,7 @@ jobs:
           registry: true
       - name: Install
         run: npx pnpm install --frozen-lockfile
+      - name: Build
+        run: npx pnpm run build
       - name: Publish to GitHub Package (unstable)
         run: ./scripts/publish-to-github.sh
