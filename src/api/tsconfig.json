@@ -4,9 +4,10 @@
             "path": "../types"
         }
     ],
-    "extends": "../tsconfig.json",
+    "extends": "../../tsconfig.json",
     "compilerOptions": {
         "rootDir": "./",
-        "outDir": "../dist/backend"
-    }
+        "outDir": "../../dist/api"
+    },
+    "include": ["**/*.ts"]
 }

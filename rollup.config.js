@@ -4,8 +4,8 @@ import sucrase from '@rollup/plugin-sucrase'
 /** @type {rollup.RollupOptions} */
 const backend = {
     input: {
-        backend: './backend/index.ts',
-        api: './api/index.ts',
+        backend: './src/backend/index.ts',
+        api: './src/api/index.ts',
         playground: './playground/index.ts',
     },
     output: {

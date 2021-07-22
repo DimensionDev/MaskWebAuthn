@@ -1,5 +1,12 @@
 {
-    "references": [{ "path": "../backend" }, { "path": "../api" }],
+    "references": [
+        {
+            "path": "../src/backend"
+        },
+        {
+            "path": "../src/api"
+        }
+    ],
     "extends": "../tsconfig.json",
     "compilerOptions": {
         "rootDir": "./",

@@ -1,8 +1,7 @@
 import { generateCreationResponse } from '../authenticator'
 import type { CreateAuthenticatorOptions } from '../index'
 import { checkUserVerification, filterCredentials } from '../util'
-import type { CollectedClientData } from '../../types/interface'
-import type { PublicKeyCredential } from '../../types/interface'
+import type { CollectedClientData, PublicKeyCredential } from '../../types/interface'
 import { Alg } from '../../types/interface'
 
 /**

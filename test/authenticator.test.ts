@@ -1,10 +1,10 @@
 /* eslint-env jest */
-import { generateCreationResponse } from '../backend/authenticator'
+import { generateCreationResponse } from '../src/backend/authenticator'
 import { Buffer } from 'buffer'
 import { decode } from 'cbor-redux'
-import { verify } from '../api/util'
+import { verify } from '../src/api/util'
 import { verifyPackedAttestation } from './util'
-import { Alg } from '../types/interface'
+import { Alg } from '../src/types/interface'
 
 let credentialID: ArrayBuffer
 let keys: CryptoKeyPair

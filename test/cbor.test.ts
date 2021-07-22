@@ -1,6 +1,6 @@
-import { encode, Number, parseJsonWebKey, UTF8String } from '../backend/cbor'
+import { encode, Number, parseJsonWebKey, UTF8String } from '../src/backend/cbor'
 import { encode as reduxEncode, decode } from 'cbor-redux'
-import { concatenate } from '../backend/util'
+import { concatenate } from '../src/backend/util'
 import { ecJwk } from './util'
 
 const validCborPublicKey = new Uint8Array([

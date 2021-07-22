@@ -1,5 +1,5 @@
-import { createCredentialsContainer } from '../api'
-import { createPublicKeyAuthenticator, NormalizedCreateOptions } from '../backend'
+import { createCredentialsContainer } from '../src/api'
+import { createPublicKeyAuthenticator, NormalizedCreateOptions } from '../src/backend'
 
 const publicKeyCredentialOptionsMap = new Set<any>()
 const keyCounter = new WeakMap<CryptoKey, number>()

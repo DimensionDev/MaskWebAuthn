@@ -1,9 +1,9 @@
 import NodeCrypto from 'crypto'
 import { decode } from 'cbor-redux'
-import type { PublicKeyCredential } from '../types/interface'
-import type { EcCosePublicKey } from '../types/interface'
-import { Alg, CoseKey, Crv, Kty } from '../types/interface'
-import { sha256 } from '../backend/util'
+import type { PublicKeyCredential } from '../src/types/interface'
+import type { EcCosePublicKey } from '../src/types/interface'
+import { Alg, CoseKey, Crv, Kty } from '../src/types/interface'
+import { sha256 } from '../src/backend/util'
 
 export const ecJwk = {
     crv: 'P-256',
