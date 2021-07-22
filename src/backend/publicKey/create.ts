@@ -1,6 +1,6 @@
 import { generateCreationResponse } from '../authenticator'
 import type { CreateAuthenticatorOptions } from '../index'
-import { checkUserVerification, filterCredentials } from '../util'
+import { checkUserVerification, filterCredentials, normalizeCreateOption } from '../util'
 import type { CollectedClientData, PublicKeyCredential } from '../../types/interface'
 import { Alg } from '../../types/interface'
 
@@ -13,11 +13,7 @@ export async function create(
     options: PublicKeyCredentialCreationOptions,
     signal?: AbortSignal,
 ): Promise<PublicKeyCredential | null> {
-    // we don't trust these parameters from upstream
-    delete options.timeout
-    delete options.rp.id
-
-    const { rpID, ...normalizedOptions } = await createOptions.getNormalizedCreateOptions()
+    const { rpId, ...normalizedOptions } = normalizeCreateOption(options)
     const timeout = normalizedOptions.timeout as number
     const abortController = new AbortController()
     const expiredSignal = abortController.signal
@@ -44,7 +40,7 @@ export async function create(
     const collectedClientData: CollectedClientData = {
         type: 'webauthn.create',
         challenge: Buffer.from(normalizedOptions.challenge).toString('base64'),
-        origin: rpID,
+        origin: rpId,
         crossOrigin: normalizedOptions.crossOrigin,
         tokenBinding: undefined,
     }
@@ -90,33 +86,31 @@ export async function create(
             }
             // tip: skip enterprise attestation
 
-            let keys: CryptoKeyPair | null = null
-            let credentialID: ArrayBuffer | null = null
+            let keys: CryptoKeyPair
+            let credentialID: ArrayBuffer
             // see https://developer.mozilla.org/en-US/docs/Web/API/PublicKeyCredentialCreationOptions/excludeCredentials
             //  this option used for the server to create new credentials for an existing user.
             if (Array.isArray(excludeCredentials) && excludeCredentials.length > 0) {
-                const excludeCredentialDescriptorList = filterCredentials(excludeCredentials)
-
-                ;[keys, credentialID] = await createOptions.getKeyPairByKeyWrap(
-                    rpID,
-                    excludeCredentialDescriptorList.map((item) => item.id),
+                ;[keys, credentialID] = await createOptions.createKeyPairByKeyWrap(
+                    rpId,
+                    filterCredentials(excludeCredentials),
                 )
                 if (!keys) {
                     throw new Error('')
                 }
             }
-            ;[keys, credentialID] = await createOptions.getResidentKeyPair(rpID)
-            const signCount = await createOptions.getSignCount(keys.privateKey, rpID, credentialID)
+            ;[keys, credentialID] = await createOptions.getResidentKeyPair(rpId)
+            const signCount = await createOptions.getSignCount(keys.privateKey, rpId, credentialID)
             const response = await generateCreationResponse(
                 credentialID,
                 keys,
                 signCount,
-                rpID,
+                rpId,
                 collectedClientData,
                 credTypesAndPubKeyAlgorithms.map((alg) => alg.alg),
                 expiredSignal,
             )
-            createOptions.incrementSignCount(keys.privateKey, rpID, credentialID).catch(console.error)
+            createOptions.incrementSignCount(keys.privateKey, rpId, credentialID).catch(console.error)
             return response
         } else {
             // ignore 'platform'

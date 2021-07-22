@@ -1,5 +1,6 @@
 import { createCredentialsContainer } from '../src/api'
-import { createPublicKeyAuthenticator, NormalizedCreateOptions } from '../src/backend'
+import { createPublicKeyAuthenticator } from '../src/backend'
+import type { NormalizedCreateOptions } from '../src/backend/util'
 
 const publicKeyCredentialOptionsMap = new Set<any>()
 const keyCounter = new WeakMap<CryptoKey, number>()
@@ -42,21 +43,17 @@ const publicKeyAuthenticator = createPublicKeyAuthenticator({
             resolve(count)
         })
     },
+    createKeyPairByKeyWrap(
+        rpID: string,
+        excludeCredentialIDs: ArrayBuffer[],
+    ): Promise<readonly [key: CryptoKeyPair, credentialID: ArrayBuffer]> {
+        return Promise.resolve([keys, credentialID])
+    },
     getKeyPairByKeyWrap(rpID: string, credentialIDs: ArrayBuffer[]): Promise<[CryptoKeyPair, ArrayBuffer]> {
         return Promise.resolve([keys, credentialID])
     },
     getResidentKeyPair(rpID: string): Promise<[CryptoKeyPair, ArrayBuffer]> {
         return Promise.resolve([keys, credentialID])
-    },
-    async getNormalizedCreateOptions(): Promise<NormalizedCreateOptions> {
-        const k = await keys
-        return Promise.resolve().then(() => ({
-            keys: k,
-            timeout: 1000 * 6,
-            rpID: 'https://localhost:8080',
-            challenge: challenge,
-            crossOrigin: false,
-        }))
     },
 })
 
