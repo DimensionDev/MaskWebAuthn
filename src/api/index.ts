@@ -3,7 +3,7 @@ import type {
     PublicKeyAuthenticatorProtocol,
     _FederatedAuthenticatorProtocol,
     _PasswordAuthenticatorProtocol,
-} from '../types/interface'
+} from '../../types/interface'
 
 export interface CreateCredentialsContainerOptions {
     publicKeyAuthenticator?: PublicKeyAuthenticatorProtocol

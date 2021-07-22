@@ -1,5 +1,5 @@
 /* eslint-env jest */
-import { ccdToString, concatenate, isRegistrableDomain, serializeCollectedClientData } from '../backend/util'
+import { ccdToString, concatenate, isRegistrableDomain, serializeCollectedClientData } from '../src/backend/util'
 
 test('is registrable domain', () => {
     expect(isRegistrableDomain('', '')).toBe(false)

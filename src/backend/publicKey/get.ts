@@ -1,7 +1,7 @@
 import type { CreateAuthenticatorOptions } from '../index'
 import { checkUserVerification, filterCredentials } from '../util'
 import { generateCreationResponse } from '../authenticator'
-import type { CollectedClientData } from '../../types/interface'
+import type { CollectedClientData } from '../../../types/interface'
 
 export async function get(
     createOptions: CreateAuthenticatorOptions,

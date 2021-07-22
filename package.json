@@ -7,9 +7,16 @@
   ],
   "repository": "https://github.com/DimensionDev/MaskWebAuthn",
   "license": "MIT",
-  "main": "index.js",
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    "api": "./dist/api.js",
+    "backend": "./dist/backend.js"
+  },
   "scripts": {
     "start": "run-p watch-tsc watch-rollup serve",
+    "build": "run-p tsc rollup",
     "test": "jest",
     "tsc": "tsc -b .",
     "watch-tsc": "tsc -b . -w",

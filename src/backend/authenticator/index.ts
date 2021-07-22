@@ -1,10 +1,10 @@
 import { concatenate, encodeAuthData, serializeCollectedClientData, sha256 } from '../util'
 import { Buffer } from 'buffer'
 import { encode } from 'cbor-redux'
-import type { CollectedClientData, AttestationObject } from '../../types/interface'
+import type { CollectedClientData, AttestationObject } from '../../../types/interface'
 import btoa from 'btoa'
-import type { PublicKeyCredential } from '../../types/interface'
-import { Alg } from '../../types/interface'
+import type { PublicKeyCredential } from '../../../types/interface'
+import { Alg } from '../../../types/interface'
 
 function getSignatureParams(alg: Alg): EcdsaParams {
     if (alg === Alg.ES256) {

@@ -1,5 +1,5 @@
 import { decode } from 'cbor-redux'
-import type { AttestationObject, PublicKeyCredential } from '../types/interface'
+import type { AttestationObject, PublicKeyCredential } from '../../types/interface'
 
 export function concatenate(...arrays: (ArrayBuffer | Uint8Array)[]): ArrayBuffer {
     const buffersLengths = arrays.map((array) => array.byteLength)
