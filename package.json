@@ -5,14 +5,7 @@
   "keywords": [
     "webauthn"
   ],
-  "homepage": "https://github.com/DimensionDev/MaskWebAuthn#readme",
-  "bugs": {
-    "url": "https://github.com/DimensionDev/MaskWebAuthn/issues"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/DimensionDev/MaskWebAuthn.git"
-  },
+  "repository": "https://github.com/DimensionDev/MaskWebAuthn",
   "license": "MIT",
   "main": "index.js",
   "scripts": {
