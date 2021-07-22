@@ -39,11 +39,7 @@ export async function get(
     // see https://developer.mozilla.org/en-US/docs/Web/API/PublicKeyCredentialCreationOptions/excludeCredentials
     //  this option used for the server to create new credentials for an existing user.
     if (Array.isArray(allowCredentials)) {
-        const excludeCredentialDescriptorList: PublicKeyCredentialDescriptor[] = filterCredentials(allowCredentials)
-        ;[keys, credentialID] = await createOptions.getKeyPairByKeyWrap(
-            rpID,
-            excludeCredentialDescriptorList.map((item) => item.id),
-        )
+        ;[keys, credentialID] = await createOptions.getKeyPairByKeyWrap(rpID, filterCredentials(allowCredentials))
         if (!keys) {
             throw new Error('')
         }

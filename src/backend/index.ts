@@ -11,10 +11,15 @@ export interface CreateAuthenticatorOptions {
     // without username
     getResidentKeyPair(rpID: string): Promise<readonly [key: CryptoKeyPair, credentialID: ArrayBuffer]>
 
-    // with username
+    // get key from existing credential
+    createKeyPairByKeyWrap(
+        rpID: string,
+        excludeCredentialIDs: ArrayBuffer[],
+    ): Promise<readonly [key: CryptoKeyPair, credentialID: ArrayBuffer]>
+
     getKeyPairByKeyWrap(
         rpID: string,
-        credentialIDs: BufferSource[],
+        candidateCredentialIDs: ArrayBuffer[],
     ): Promise<readonly [key: CryptoKeyPair | null, credentialID: ArrayBuffer]>
 }
 

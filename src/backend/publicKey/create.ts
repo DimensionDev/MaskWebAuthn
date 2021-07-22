@@ -86,16 +86,14 @@ export async function create(
             }
             // tip: skip enterprise attestation
 
-            let keys: CryptoKeyPair | null = null
-            let credentialID: ArrayBuffer | null = null
+            let keys: CryptoKeyPair
+            let credentialID: ArrayBuffer
             // see https://developer.mozilla.org/en-US/docs/Web/API/PublicKeyCredentialCreationOptions/excludeCredentials
             //  this option used for the server to create new credentials for an existing user.
             if (Array.isArray(excludeCredentials) && excludeCredentials.length > 0) {
-                const excludeCredentialDescriptorList = filterCredentials(excludeCredentials)
-
-                ;[keys, credentialID] = await createOptions.getKeyPairByKeyWrap(
+                ;[keys, credentialID] = await createOptions.createKeyPairByKeyWrap(
                     rpId,
-                    excludeCredentialDescriptorList.map((item) => item.id),
+                    filterCredentials(excludeCredentials),
                 )
                 if (!keys) {
                     throw new Error('')

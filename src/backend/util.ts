@@ -48,16 +48,18 @@ export function checkUserVerification(userVerification: UserVerificationRequirem
     }
 }
 
-export function filterCredentials(credentials: PublicKeyCredentialDescriptor[]): PublicKeyCredentialDescriptor[] {
-    return credentials.filter((credential) => {
-        if (credential.transports && Array.isArray(credential.transports) && credential.transports.length > 0) {
-            // https://www.w3.org/TR/webauthn-3/#enum-transport
-            // we not support these types
-            return false
-        } else {
-            return credential.type === 'public-key'
-        }
-    })
+export function filterCredentials(credentials: PublicKeyCredentialDescriptor[]): ArrayBuffer[] {
+    return credentials
+        .filter((credential) => {
+            if (credential.transports && Array.isArray(credential.transports) && credential.transports.length > 0) {
+                // https://www.w3.org/TR/webauthn-3/#enum-transport
+                // we not support these types
+                return false
+            } else {
+                return credential.type === 'public-key'
+            }
+        })
+        .map(({ id }) => ('buffer' in id ? id.buffer : id))
 }
 
 export function serializeCollectedClientData(collectedClientData: CollectedClientData): string {
