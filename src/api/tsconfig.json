@@ -1,7 +1,7 @@
 {
     "references": [
         {
-            "path": "../../types"
+            "path": "../types"
         }
     ],
     "extends": "../../tsconfig.json",

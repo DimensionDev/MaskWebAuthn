@@ -4,7 +4,7 @@ import { Buffer } from 'buffer'
 import { decode } from 'cbor-redux'
 import { verify } from '../src/api/util'
 import { verifyPackedAttestation } from './util'
-import { Alg } from '../types/interface'
+import { Alg } from '../src/types/interface'
 
 let credentialID: ArrayBuffer
 let keys: CryptoKeyPair

@@ -7,7 +7,7 @@
             "path": "./src/api"
         },
         {
-            "path": "./types"
+            "path": "./src/types"
         },
         {
             "path": "./playground"

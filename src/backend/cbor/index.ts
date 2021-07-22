@@ -1,5 +1,5 @@
 import { concatenate, stringToArrayBuffer } from '../util'
-import { Alg, CoseKey, Crv, Kty } from '../../../types/interface'
+import { Alg, CoseKey, Crv, Kty } from '../../types/interface'
 
 declare global {
     interface ObjectConstructor {

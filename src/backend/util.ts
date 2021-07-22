@@ -1,4 +1,4 @@
-import type { CollectedClientData } from '../../types/interface'
+import type { CollectedClientData } from '../types/interface'
 import { parseJsonWebKey } from './cbor'
 
 export function isRegistrableDomain(hostSuffixString: string, originalHost: string): boolean {

@@ -1,5 +1,5 @@
 import { create, get } from './publicKey'
-import type { PublicKeyAuthenticatorProtocol } from '../../types/interface'
+import type { PublicKeyAuthenticatorProtocol } from '../types/interface'
 
 export interface NormalizedCreateOptions {
     timeout: number
