@@ -8,17 +8,17 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
-      - name: Use Node.js (LTS)
-        uses: actions/setup-node@v2-beta
+      - uses: actions/setup-node@v2
+      - uses: pnpm/action-setup@master
+        with:
+          version: latest
       - uses: DimensionDev/github-token-action@latest
         with:
           registry: true
-      - name: Install
-        run: npx pnpm install --frozen-lockfile
-      - name: Build
-        run: npx pnpm run build
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run build
       - name: Publish to GitHub Package (unstable)
         run: ./scripts/publish-to-github.sh
