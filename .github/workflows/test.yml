@@ -1,18 +1,19 @@
 name: Test
+
 on: [ push, pull_request ]
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
-      - name: Use Node.js
-        uses: actions/setup-node@v2
+      - uses: actions/setup-node@v2
+      - uses: pnpm/action-setup@master
         with:
-          node-version: 16.x
+          version: latest
       - uses: actions/cache@v2
         with:
           path: ~/.pnpm-store
           key: ${{ runner.os }}-node-${{ hashFiles('pnpm-lock.yaml') }}
-      - run: npx pnpm install
-      - run: npx pnpm run test
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run test
