@@ -9,7 +9,7 @@ function getSignatureParams(alg: Alg): EcdsaParams {
     if (alg === Alg.ES256) {
         return {
             name: 'ECDSA',
-            hash: 'SHA-256',
+            hash: { name: 'SHA-256' },
         }
     } else {
         throw new TypeError('Unsupported algorithm')
