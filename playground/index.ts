@@ -14,22 +14,6 @@ const credentialID = new Uint8Array(16).fill(0x11).buffer
 const challenge = new Uint8Array(16).map((_, index) => index % 8)
 
 const publicKeyAuthenticator = createPublicKeyAuthenticator({
-    hasCredential(rpID: string, credentialID?: ArrayBuffer | null): Promise<boolean> {
-        return new Promise<boolean>((resolve) => {
-            if (
-                publicKeyCredentialOptionsMap.has({
-                    rpID,
-                })
-            ) {
-                resolve(true)
-            } else {
-                publicKeyCredentialOptionsMap.add({
-                    rpID,
-                })
-                resolve(false)
-            }
-        })
-    },
     incrementSignCount(key: CryptoKey): Promise<void> {
         keyCounter.set(key, (keyCounter.get(key) || 0) + 2)
         return Promise.resolve()

@@ -3,6 +3,7 @@ import type { CreateAuthenticatorOptions } from '../index'
 import { checkUserVerification, filterCredentials, normalizeCreateOption } from '../util'
 import type { CollectedClientData, PublicKeyCredential } from '../../types/interface'
 import { Alg } from '../../types/interface'
+import { bytesToBase64 } from '../util/base64'
 
 /**
  *
@@ -13,7 +14,8 @@ export async function create(
     options: PublicKeyCredentialCreationOptions,
     signal?: AbortSignal,
 ): Promise<PublicKeyCredential | null> {
-    const { rpId, ...normalizedOptions } = normalizeCreateOption(options)
+    const { ...normalizedOptions } = normalizeCreateOption(options)
+    const rpId = normalizedOptions.rp.id!
     const timeout = normalizedOptions.timeout as number
     const abortController = new AbortController()
     const expiredSignal = abortController.signal
@@ -39,7 +41,7 @@ export async function create(
 
     const collectedClientData: CollectedClientData = {
         type: 'webauthn.create',
-        challenge: Buffer.from(normalizedOptions.challenge).toString('base64'),
+        challenge: bytesToBase64(new Uint8Array(normalizedOptions.challenge)),
         origin: rpId,
         crossOrigin: normalizedOptions.crossOrigin,
         tokenBinding: undefined,

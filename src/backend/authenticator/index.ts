@@ -1,5 +1,4 @@
 import { concatenate, encodeAuthData, serializeCollectedClientData, sha256 } from '../util'
-import { Buffer } from 'buffer'
 import { encode } from 'cbor-redux'
 import type { CollectedClientData, AttestationObject } from '../../types/interface'
 import btoa from 'btoa'
@@ -10,7 +9,7 @@ function getSignatureParams(alg: Alg): EcdsaParams {
     if (alg === Alg.ES256) {
         return {
             name: 'ECDSA',
-            hash: 'SHA-256',
+            hash: { name: 'SHA-256' },
         }
     } else {
         throw new TypeError('Unsupported algorithm')
