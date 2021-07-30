@@ -14,7 +14,8 @@ export async function create(
     options: PublicKeyCredentialCreationOptions,
     signal?: AbortSignal,
 ): Promise<PublicKeyCredential | null> {
-    const { rpId, ...normalizedOptions } = normalizeCreateOption(options)
+    const { ...normalizedOptions } = normalizeCreateOption(options)
+    const rpId = normalizedOptions.rp.id!
     const timeout = normalizedOptions.timeout as number
     const abortController = new AbortController()
     const expiredSignal = abortController.signal
