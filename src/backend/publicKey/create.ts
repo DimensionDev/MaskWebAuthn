@@ -3,6 +3,7 @@ import type { CreateAuthenticatorOptions } from '../index'
 import { checkUserVerification, filterCredentials, normalizeCreateOption } from '../util'
 import type { CollectedClientData, PublicKeyCredential } from '../../types/interface'
 import { Alg } from '../../types/interface'
+import { bytesToBase64 } from '../util/base64'
 
 /**
  *
@@ -39,7 +40,7 @@ export async function create(
 
     const collectedClientData: CollectedClientData = {
         type: 'webauthn.create',
-        challenge: Buffer.from(normalizedOptions.challenge).toString('base64'),
+        challenge: bytesToBase64(new Uint8Array(normalizedOptions.challenge)),
         origin: rpId,
         crossOrigin: normalizedOptions.crossOrigin,
         tokenBinding: undefined,
