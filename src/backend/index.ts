@@ -27,3 +27,5 @@ export function createPublicKeyAuthenticator(opts: CreateAuthenticatorOptions): 
         get: get.bind(undefined, opts),
     }
 }
+
+export { isRegistrableDomain } from './util'
